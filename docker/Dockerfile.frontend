@@ -1,0 +1,21 @@
+# Sử dụng Node.js để build ứng dụng frontend
+FROM node:18
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+RUN npm run build
+
+# Sử dụng Nginx để phục vụ frontend
+FROM nginx:stable-alpine
+
+COPY --from=0 /app/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
