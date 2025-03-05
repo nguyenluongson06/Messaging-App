@@ -30,6 +30,7 @@ const validateUsername = body('username')
 	});
 
 // Validate password when registering (length at least 6 characters, must contain at least one number and one letter)
+// TODO: should be handled by frontend, only send hashed password to backend
 const validatePassword = body('password')
 	.isLength({ min: 6 })
 	.withMessage('Mật khẩu phải có ít nhất 6 ký tự')

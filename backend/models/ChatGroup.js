@@ -14,8 +14,8 @@ ChatGroup.init(
 			allowNull: false,
 			references: { model: User, key: 'uid' },
 		},
-		created_at: { type: DataTypes.DATE, defaultValue: Sequelize.NOW },
-		updated_at: { type: DataTypes.DATE, defaultValue: Sequelize.NOW },
+		created_at: { type: DataTypes.DATE, defaultValue: sequelize.literal('CURRENT_TIMESTAMP') },
+		updated_at: { type: DataTypes.DATE, defaultValue: sequelize.literal('CURRENT_TIMESTAMP') },
 	},
 	{ sequelize, modelName: 'ChatGroup', timestamps: false },
 );

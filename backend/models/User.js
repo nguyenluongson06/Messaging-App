@@ -9,8 +9,8 @@ User.init(
 		email: { type: DataTypes.STRING(255), unique: true, allowNull: false },
 		username: { type: DataTypes.STRING(255), unique: true, allowNull: false },
 		password: { type: DataTypes.STRING(255), allowNull: false },
-		created_at: { type: DataTypes.DATE, defaultValue: Sequelize.NOW },
-		updated_at: { type: DataTypes.DATE, defaultValue: Sequelize.NOW },
+		created_at: { type: DataTypes.DATE, defaultValue: sequelize.literal('CURRENT_TIMESTAMP') },
+		updated_at: { type: DataTypes.DATE, defaultValue: sequelize.literal('CURRENT_TIMESTAMP') },
 	},
 	{ sequelize, modelName: 'User', timestamps: false },
 );
