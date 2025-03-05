@@ -21,11 +21,11 @@ const validateEmail = body('email')
 const validateUsername = body('username')
 	.trim()
 	.isLength({ min: 6, max: 20 })
-	.withMessage('Username phải chứa từ 6 đến 20 ký tự')
+	.withMessage('Tên người dùng phải chứa từ 6 đến 20 ký tự')
 	.custom(async (value) => {
 		const existingUser = await User.findOne({ where: { username: value } });
 		if (existingUser) {
-			throw new Error('Username đã tồn tại');
+			throw new Error('Tên người dùng đã tồn tại');
 		}
 	});
 
@@ -44,28 +44,8 @@ const validateLogin = [
 	body('username')
 		.trim()
 		.notEmpty()
-		.withMessage('Username không được để trống'),
+		.withMessage('Tên người dùng không được để trống'),
 	body('password').notEmpty().withMessage('Mật khẩu không được để trống'),
-	body(['username', 'password']).custom(async (value, { req }) => {
-		const { username, password } = req.body;
-
-		// check if user exists
-		const user = await User.findOne({
-			where: {
-				[Op.or]: [{ username }, { email: username }], // Hỗ trợ đăng nhập bằng username hoặc email
-			},
-		});
-
-		if (!user) {
-			throw new Error('Username hoặc mật khẩu không chính xác');
-		}
-
-		// check if password is correct
-		const isMatch = await bcrypt.compare(password, user.password);
-		if (!isMatch) {
-			throw new Error('Username hoặc mật khẩu không chính xác');
-		}
-	}),
 ];
 
 // Validate message (length between 1 and 1000 characters)
