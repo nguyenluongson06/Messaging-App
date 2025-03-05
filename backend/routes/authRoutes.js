@@ -1,12 +1,8 @@
 const express = require('express');
-const router = express.Router();
-const { signup, signin, signout } = require('../controllers/authController');
-const { findUser } = require('../controllers/findUser');
+const { registerUser } = require('../controllers/authControllers');
 
-//TODO: create controllers + route handlers for auths
-router.get('/find', findUser);
-router.post('/signup', signup);
-router.post('/signin', signin);
-router.post('/signout', signout);
+const router = express.Router();
+
+router.post('/register', registerUser);
 
 module.exports = router;
