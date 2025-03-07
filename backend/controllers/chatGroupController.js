@@ -22,6 +22,42 @@ exports.createChatGroup = async (req, res) => {
 	}
 };
 
+exports.updateMemberInGroup = async(req, res) => {
+	try {
+		const { group_id, user_id, role, alias } = req.body;
+
+		const group = await ChatGroup.findOne({ where: { uid: group_id } });
+		if (!group) {
+			return res.status(404).json({ message: 'Nhóm không tồn tại' });
+		}
+
+		const user = await User.findOne({ where: { uid: user_id } });
+		if (!user) {
+			return res.status(404).json({ message: 'Người dùng không tồn tại' });
+		}
+
+		const member = await GroupMember.findOne({ where: { group_id, user_id } });
+		if (!member) {
+			return res
+				.status(404)
+				.json({ message: 'Người dùng không phải là thành viên của nhóm' });
+		}
+
+		if (role) member.role = role;
+		if (alias) member.alias = alias;
+
+		await member.save();
+		return res.status(200).json({
+			message: 'Cập nhật thành viên thành công',
+			member,
+		});
+	} catch (error) {
+		return res
+			.status(500)
+			.json({ message: 'Lỗi khi cập nhật thành viên', error: error.message });
+	}
+};
+
 exports.addMember = async (req, res) => {
 	try {
 		const { group_id, user_id } = req.body;
