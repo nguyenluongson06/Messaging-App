@@ -26,6 +26,8 @@ body {
   height: 100vh;
   padding: 10px;
   border-right: 1px solid #ddd;
+  width: 316px; /* Hoặc giá trị phù hợp */
+  flex-shrink: 0;
 }
 
 .sidebar .user-item {
@@ -52,20 +54,39 @@ body {
 .chat-box {
   background-color: white;
   height: calc(100vh - 56px);
-  display: flex;
+  display: flex;  
   flex-direction: column;
+  width: 100%; /* Thêm dòng này */
 }
 
-/* Header của khung chat */
 .chat-header {
+  width: 100%;
+  padding: 10px 20px; /* Tăng padding để không bị cụt hai bên */
+  background-color: white;
+  border-bottom: 1px solid #ddd;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 15px;
-  background-color: #222;
-  color: white;
-  border-bottom: 1px solid #444;
+  box-sizing: border-box; /* Đảm bảo padding không làm thu hẹp phần header */
 }
+
+.icon-btn {
+  color: #ff4d88 !important; /* Chuyển icon thành màu hồng */
+}
+
+.icon-btn:hover {
+  color: #ff1a66 !important; /* Màu hồng đậm khi hover */
+}
+
+.chat-user-name {
+  color: #ff4d88 !important; /* Tên người chat cũng hồng */
+}
+
+.chat-user-avatar {
+  border: 2px solid #ff4d88 !important; /* Viền avatar màu hồng */
+}
+
+
 
 /* Thông tin người đang chat */
 .chat-user-info {
@@ -85,8 +106,12 @@ body {
   font-size: 16px;
 }
 
-/* Nút thông tin (icon ℹ️) */
-.info-btn {
+.chat-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.icon-btn {
   background: none;
   border: none;
   color: white;
@@ -97,7 +122,6 @@ body {
 .info-btn:hover {
   color: #ccc;
 }
-
 
 .messages {
   flex: 1;
@@ -310,5 +334,36 @@ body {
 .user-item:hover {
   background-color: #f1f1f1;
 }
+
+.current-user {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  background-color: #fff; /* Nền trắng */
+}
+
+.current-user-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 2px solid #ff4d88; /* Viền hồng */
+}
+
+.current-user-info {
+  margin-left: 10px;
+}
+
+.current-user-name {
+  font-weight: bold;
+  font-size: 16px;
+  color: #000;
+}
+
+.current-user-status {
+  font-size: 12px;
+  color: #777;
+}
+
 
 

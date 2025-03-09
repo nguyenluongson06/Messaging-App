@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Form, Button, Image } from "react-bootstrap";
 import Message from "./Message";
+import { FiPhone, FiVideo, FiInfo } from "react-icons/fi"; // Import icon
 
 const ChatWindow = ({ user }) => {
   const [messages, setMessages] = useState([]); 
   const [input, setInput] = useState("");
 
-  // Reset tin nhắn khi user thay đổi
   useEffect(() => {
     setMessages([]);
   }, [user]);
@@ -26,7 +26,11 @@ const ChatWindow = ({ user }) => {
           <Image src={user.avatar} roundedCircle className="chat-user-avatar" />
           <span className="chat-user-name">{user.name}</span>
         </div>
-        <button className="info-btn">ℹ️</button>
+        <div className="chat-actions">
+          <button className="icon-btn"><FiPhone /></button>
+          <button className="icon-btn"><FiVideo /></button>
+          <button className="icon-btn"><FiInfo /></button>
+        </div>
       </div>
 
       {/* Khu vực tin nhắn */}

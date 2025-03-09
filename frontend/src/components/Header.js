@@ -12,7 +12,7 @@ const Header = () => {
 
   return (
     <Navbar bg="primary" variant="dark" className="px-3">
-      <Navbar.Brand>Messenger</Navbar.Brand>
+      <Navbar.Brand>Chat-App</Navbar.Brand>
       <Nav className="ms-auto">
         <Dropdown>
         <Dropdown.Toggle variant="link" id="avatar-dropdown" className="avatar-btn" caret={false}>

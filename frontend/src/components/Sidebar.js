@@ -7,6 +7,7 @@ const Sidebar = ({ setCurrentChat }) => {
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [groupName, setGroupName] = useState(""); // Thêm state cho tên nhóm
   const [chats, setChats] = useState([]); // Lưu danh sách chat
+  
 
   const users = [
     { name: "Alice", avatar: "https://i.pravatar.cc/40?img=1" },
@@ -16,7 +17,8 @@ const Sidebar = ({ setCurrentChat }) => {
     { name: "Emma", avatar: "https://i.pravatar.cc/40?img=5" },
     { name: "Frank", avatar: "https://i.pravatar.cc/40?img=6" },
     { name: "Grace", avatar: "https://i.pravatar.cc/40?img=7" },
-    { name: "Henry", avatar: "https://i.pravatar.cc/40?img=8" }
+    { name: "Henry", avatar: "https://i.pravatar.cc/40?img=8" },
+    { name: "Mark", avatar: "https://i.pravatar.cc/40?img=9" },
   ];
 
   const filteredUsers = users.filter((user) =>
@@ -49,6 +51,14 @@ const Sidebar = ({ setCurrentChat }) => {
       alert("Cần chọn ít nhất 2 người và đặt tên nhóm!");
     }
   };
+
+  <div className="current-user">
+  <Image src="https://i.pravatar.cc/50" roundedCircle className="current-user-avatar" />
+  <div className="current-user-info">
+    <span className="current-user-name">Người dùng</span>
+    <span className="current-user-status">Hoạt động 32 phút trước</span>
+  </div>
+</div>
 
   return (
     <div className="sidebar">
