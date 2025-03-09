@@ -56,6 +56,49 @@ body {
   flex-direction: column;
 }
 
+/* Header của khung chat */
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background-color: #222;
+  color: white;
+  border-bottom: 1px solid #444;
+}
+
+/* Thông tin người đang chat */
+.chat-user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chat-user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.chat-user-name {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+/* Nút thông tin (icon ℹ️) */
+.info-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.info-btn:hover {
+  color: #ccc;
+}
+
+
 .messages {
   flex: 1;
   overflow-y: auto;
@@ -201,15 +244,24 @@ body {
   opacity: 0.8;
 }
 
-.search-bar {
-  margin: 10px auto;
+.search-group-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 10px;
-  border-radius: 20px; /* Bo tròn 4 góc */
-  border: 1px solid #ccc;
-  width: 90%;
-  display: block;
 }
 
+.search-bar {
+  flex-grow: 1;
+  border-radius: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+
+.group-btn {
+  white-space: nowrap;
+  border-radius: 20px;
+}
 
 .user-item {
   display: flex;
@@ -228,6 +280,35 @@ body {
   width: 40px;
   height: 40px;
   border-radius: 50%;
+}
+
+.search-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px;
+}
+
+.add-group-btn {
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+}
+
+.user-avatar {
+  width: 30px;
+  height: 30px;
+  margin-right: 10px;
+}
+
+.user-item {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.user-item:hover {
+  background-color: #f1f1f1;
 }
 
 
