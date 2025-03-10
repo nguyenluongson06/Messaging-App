@@ -6,11 +6,6 @@ const jwt = require('jsonwebtoken');
 module.exports.userRegister = async (req, res) => {
 	const { userName, email, password } = req.body;
 	const error = [];
-
-	const user = User.findOne({ where: { username: userName } });
-	if (user) {
-		error.push('Tên người dùng đã tồn tại');
-	}
 	if (!userName) {
 		error.push('Vui lòng cung cấp tên người dùng');
 	}
