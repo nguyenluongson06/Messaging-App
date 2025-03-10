@@ -1,20 +1,12 @@
 const { Op } = require('sequelize');
-const User = require('../models/User');
-/**
- * Find user by username or uid as an URL parameter
- * URL example: example.com/auth/find?query={query}
- * @param {*} req request sent
- * @param {*} res response
- * @returns
- */
+const { User } = require('../models/User');
+
 exports.findUser = async (req, res) => {
 	try {
-		const { query } = req.query.query;
+		const { query } = req.query;
 
 		if (!query) {
-			return res
-				.status(400)
-				.json({ message: 'Vui lòng nhập từ khóa tìm kiếm' });
+			return res.status(400).json({ message: 'Please enter a search keyword' });
 		}
 
 		const users = await User.findAll({
@@ -28,14 +20,13 @@ exports.findUser = async (req, res) => {
 		});
 
 		if (users.length === 0) {
-			return res.status(404).json({ message: 'Không tìm thấy người dùng' });
+			return res.status(404).json({ message: 'No users found' });
 		}
 
 		return res.status(200).json(users);
 	} catch (error) {
-		return res.status(500).json({
-			message: 'Lỗi khi tìm kiếm người dùng',
-			error: error.message,
-		});
+		return res
+			.status(500)
+			.json({ message: 'Error finding users', error: error.message });
 	}
 };

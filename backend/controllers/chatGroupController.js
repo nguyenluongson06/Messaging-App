@@ -4,57 +4,57 @@ const { GroupMember } = require('../models/GroupMember');
 
 exports.createChatGroup = async (req, res) => {
 	try {
-		const { name, description, owner_id } = req.body;
+		const { name, description } = req.body;
+		const owner_id = req.user.id;
 
-		const owner = await User.findOne({ where: { uid: owner_id } });
+		const owner = await User.findOne({ where: { id: owner_id } });
 		if (!owner) {
-			return res.status(404).json({ message: 'Chủ nhóm không tồn tại' });
+			return res.status(404).json({ message: 'Owner not found' });
 		}
 
 		const newGroup = await ChatGroup.create({ name, description, owner_id });
 		return res
 			.status(201)
-			.json({ message: 'Nhóm chat được tạo thành công', group: newGroup });
+			.json({ message: 'Chat group created successfully', group: newGroup });
 	} catch (error) {
 		return res
 			.status(500)
-			.json({ message: 'Lỗi khi tạo nhóm', error: error.message });
+			.json({ message: 'Error creating group', error: error.message });
 	}
 };
 
-exports.updateMemberInGroup = async(req, res) => {
+exports.updateMemberInGroup = async (req, res) => {
 	try {
 		const { group_id, user_id, role, alias } = req.body;
 
 		const group = await ChatGroup.findOne({ where: { uid: group_id } });
 		if (!group) {
-			return res.status(404).json({ message: 'Nhóm không tồn tại' });
+			return res.status(404).json({ message: 'Group not found' });
 		}
 
 		const user = await User.findOne({ where: { uid: user_id } });
 		if (!user) {
-			return res.status(404).json({ message: 'Người dùng không tồn tại' });
+			return res.status(404).json({ message: 'User not found' });
 		}
 
 		const member = await GroupMember.findOne({ where: { group_id, user_id } });
 		if (!member) {
 			return res
 				.status(404)
-				.json({ message: 'Người dùng không phải là thành viên của nhóm' });
+				.json({ message: 'User is not a member of the group' });
 		}
 
 		if (role) member.role = role;
 		if (alias) member.alias = alias;
 
 		await member.save();
-		return res.status(200).json({
-			message: 'Cập nhật thành viên thành công',
-			member,
-		});
+		return res
+			.status(200)
+			.json({ message: 'Member updated successfully', member });
 	} catch (error) {
 		return res
 			.status(500)
-			.json({ message: 'Lỗi khi cập nhật thành viên', error: error.message });
+			.json({ message: 'Error updating member', error: error.message });
 	}
 };
 
@@ -64,12 +64,12 @@ exports.addMember = async (req, res) => {
 
 		const group = await ChatGroup.findOne({ where: { uid: group_id } });
 		if (!group) {
-			return res.status(404).json({ message: 'Nhóm không tồn tại' });
+			return res.status(404).json({ message: 'Group not found' });
 		}
 
 		const user = await User.findOne({ where: { uid: user_id } });
 		if (!user) {
-			return res.status(404).json({ message: 'Người dùng không tồn tại' });
+			return res.status(404).json({ message: 'User not found' });
 		}
 
 		const existingMember = await GroupMember.findOne({
@@ -78,7 +78,7 @@ exports.addMember = async (req, res) => {
 		if (existingMember) {
 			return res
 				.status(400)
-				.json({ message: 'Người dùng đã là thành viên của nhóm' });
+				.json({ message: 'User is already a member of the group' });
 		}
 
 		const newMember = await GroupMember.create({
@@ -88,11 +88,11 @@ exports.addMember = async (req, res) => {
 		});
 		return res
 			.status(201)
-			.json({ message: 'Thêm thành viên thành công', member: newMember });
+			.json({ message: 'Member added successfully', member: newMember });
 	} catch (error) {
 		return res
 			.status(500)
-			.json({ message: 'Lỗi khi thêm thành viên', error: error.message });
+			.json({ message: 'Error adding member', error: error.message });
 	}
 };
 
@@ -102,26 +102,26 @@ exports.removeMember = async (req, res) => {
 
 		const group = await ChatGroup.findOne({ where: { uid: group_id } });
 		if (!group) {
-			return res.status(404).json({ message: 'Nhóm không tồn tại' });
+			return res.status(404).json({ message: 'Group not found' });
 		}
 
 		const user = await User.findOne({ where: { uid: user_id } });
 		if (!user) {
-			return res.status(404).json({ message: 'Người dùng không tồn tại' });
+			return res.status(404).json({ message: 'User not found' });
 		}
 
 		const member = await GroupMember.findOne({ where: { group_id, user_id } });
 		if (!member) {
 			return res
 				.status(404)
-				.json({ message: 'Người dùng không phải là thành viên của nhóm' });
+				.json({ message: 'User is not a member of the group' });
 		}
 
 		await member.destroy();
-		return res.status(200).json({ message: 'Xóa thành viên thành công' });
+		return res.status(200).json({ message: 'Member removed successfully' });
 	} catch (error) {
 		return res
 			.status(500)
-			.json({ message: 'Lỗi khi xóa thành viên', error: error.message });
+			.json({ message: 'Error removing member', error: error.message });
 	}
 };

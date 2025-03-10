@@ -18,6 +18,9 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
     container_name: chat_backend
     restart: always
     depends_on:
@@ -25,21 +28,28 @@ services:
     environment:
       DB_HOST: mysql
       DB_USER: chatuser
-      DB_PASS: chatpassword
+      DB_PASSWORD: chatpassword
       DB_NAME: chatdb
+      JWT_SECRET: your_jwt_secret
+      PORT: 3000
     ports:
-      - "5000:5000"
+      - "3000:3000"
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile.frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     container_name: chat_frontend
     restart: always
     depends_on:
       - backend
     ports:
-      - "3000:80"
+      - "3001:80"
+    environment:
+      REACT_APP_API_URL: http://localhost:80
 
 volumes:
   mysql_data:
