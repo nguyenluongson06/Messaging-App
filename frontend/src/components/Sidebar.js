@@ -18,6 +18,7 @@ const Sidebar = ({ setCurrentChat }) => {
     { name: "Frank", avatar: "https://i.pravatar.cc/40?img=9" },
     { name: "Grace", avatar: "https://i.pravatar.cc/40?img=7" },
     { name: "Henry", avatar: "https://i.pravatar.cc/40?img=8" },
+    { name: "Mark", avatar: "https://i.pravatar.cc/40?img=17" },
   ];
 
   const filteredUsers = users.filter((user) =>
