@@ -55,6 +55,16 @@ const validateMessage = body('content')
 	.withMessage('Tin nhắn phải từ 1 đến 1000 ký tự')
 	.escape();
 
+const validateGroupCreation = [
+	body('name').notEmpty().withMessage('Group name is required'),
+	body('description').optional().isString(),
+];
+
+const validateGroupMemberOperation = [
+	body('group_id').notEmpty().withMessage('Group ID is required'),
+	body('user_id').notEmpty().withMessage('User ID is required'),
+];
+
 // Xuất các middleware
 module.exports = {
 	validateRequest,
@@ -63,4 +73,6 @@ module.exports = {
 	validatePassword,
 	validateLogin,
 	validateMessage,
+	validateGroupCreation,
+	validateGroupMemberOperation,
 };
