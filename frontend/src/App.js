@@ -3,7 +3,10 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Chat from "./pages/Chat";
+import 'bootstrap/dist/css/bootstrap.min.css';
 import "./App.css";
+
+
 
 const App = () => {
   const [user, setUser] = useState(null); // Lưu trạng thái đăng nhập

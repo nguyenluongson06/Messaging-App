@@ -6,7 +6,8 @@ body {
 
 /* 🌟 Header */
 .navbar {
-  background-color: #0084ff !important;
+  background-color: #ff4d88 !important;
+  padding: 15px 20px;
 }
 
 .navbar-brand {
@@ -23,12 +24,15 @@ body {
 /* 🌟 Sidebar */
 .sidebar {
   background-color: white;
-  height: 100vh;
+  height: 88vh; /* Giảm chiều cao xuống 80% màn hình */
+  max-height: 600px; /* Hoặc đặt chiều cao cố định nếu muốn */
   padding: 10px;
   border-right: 1px solid #ddd;
-  width: 316px; /* Hoặc giá trị phù hợp */
+  width: 316px;
   flex-shrink: 0;
+  overflow-y: auto; /* Thêm thanh cuộn nếu nội dung quá nhiều */
 }
+
 
 .sidebar .user-item {
   display: flex;
@@ -53,15 +57,16 @@ body {
 /* 🌟 Chat Window */
 .chat-box {
   background-color: white;
-  height: calc(100vh - 56px);
+  height: 76vh; /* Thay đổi từ calc(100vh - 56px) thành 80vh hoặc giá trị bạn muốn */
+  max-height: 600px; /* Thêm nếu muốn giới hạn chiều cao tối đa */
   display: flex;  
   flex-direction: column;
-  width: 100%; /* Thêm dòng này */
+  width: 100%;
 }
 
 .chat-header {
   width: 100%;
-  padding: 10px 20px; /* Tăng padding để không bị cụt hai bên */
+  padding: 20px 20px; /* Tăng padding để không bị cụt hai bên */
   background-color: white;
   border-bottom: 1px solid #ddd;
   display: flex;
@@ -159,7 +164,7 @@ body {
 }
 
 .message.you {
-  background-color: #0084ff;
+  background-color: #ff4d88;
   color: white;
   align-self: flex-end;
 }
@@ -194,7 +199,7 @@ body {
   margin-bottom: 20px;
   font-size: 24px;
   font-weight: bold;
-  color: #1877f2; /* Màu xanh Messenger */
+  color: #ff4d88;
 }
 
 /* Input fields */
@@ -216,7 +221,7 @@ body {
   padding: 12px;
   border: none;
   border-radius: 5px;
-  background: #1877f2;
+  background: #ff4d88;
   color: white;
   font-size: 16px;
   font-weight: bold;
@@ -225,7 +230,7 @@ body {
 }
 
 .auth-box button:hover {
-  background: #145dbf;
+  background: #ff4d88;
 }
 
 /* Đoạn hỏi "Chưa có tài khoản?" */
@@ -254,11 +259,12 @@ body {
   border: none !important;
   background: none !important;
   padding: 0;
+  margin-left: 10px;
 }
 
 .avatar-img {
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   cursor: pointer;
   transition: 0.3s;
@@ -317,6 +323,12 @@ body {
   padding: 8px 12px;
   border-radius: 20px;
   font-size: 14px;
+  background-color: pink;
+  border: 1px solid #ff4d88 !important;
+}
+
+.add-group-btn:hover {
+  background-color: pink; 
 }
 
 .user-avatar {
@@ -363,6 +375,15 @@ body {
 .current-user-status {
   font-size: 12px;
   color: #777;
+}
+
+.bg-primary {
+  --bs-bg-opacity: 1;
+  background-color: #ff4d88 !important;
+}
+
+.dropdown-toggle::after {
+  display: none !important; /* Ẩn mũi tên của Bootstrap */
 }
 
 

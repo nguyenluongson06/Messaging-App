@@ -15,17 +15,15 @@ const Sidebar = ({ setCurrentChat }) => {
     { name: "Charlie", avatar: "https://i.pravatar.cc/40?img=3" },
     { name: "David", avatar: "https://i.pravatar.cc/40?img=4" },
     { name: "Emma", avatar: "https://i.pravatar.cc/40?img=5" },
-    { name: "Frank", avatar: "https://i.pravatar.cc/40?img=6" },
+    { name: "Frank", avatar: "https://i.pravatar.cc/40?img=9" },
     { name: "Grace", avatar: "https://i.pravatar.cc/40?img=7" },
     { name: "Henry", avatar: "https://i.pravatar.cc/40?img=8" },
-    { name: "Mark", avatar: "https://i.pravatar.cc/40?img=9" },
   ];
 
   const filteredUsers = users.filter((user) =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Xử lý chọn thành viên
   const handleSelectUser = (user) => {
     setSelectedUsers((prev) =>
       prev.some((u) => u.name === user.name)
@@ -34,37 +32,27 @@ const Sidebar = ({ setCurrentChat }) => {
     );
   };
 
-  // Tạo nhóm
   const handleCreateGroup = () => {
     if (selectedUsers.length >= 2 && groupName.trim() !== "") {
       const newGroup = {
-        name: groupName, // Dùng tên nhóm do người dùng nhập
-        avatar: "https://cdn-icons-png.flaticon.com/512/847/847969.png", // Avatar nhóm mặc định
+        name: groupName,
+        avatar: "https://cdn-icons-png.flaticon.com/512/847/847969.png",
         members: selectedUsers
       };
-      setChats([...chats, newGroup]); // Thêm nhóm vào danh sách chat
-      setCurrentChat(newGroup); // Mở nhóm ngay khi tạo
+      setChats([...chats, newGroup]);
+      setCurrentChat(newGroup);
       setShowModal(false);
-      setSelectedUsers([]); // Reset danh sách chọn
-      setGroupName(""); // Reset ô nhập tên nhóm
+      setSelectedUsers([]);
+      setGroupName("");
     } else {
       alert("Cần chọn ít nhất 2 người và đặt tên nhóm!");
     }
   };
 
-  <div className="current-user">
-  <Image src="https://i.pravatar.cc/50" roundedCircle className="current-user-avatar" />
-  <div className="current-user-info">
-    <span className="current-user-name">Người dùng</span>
-    <span className="current-user-status">Hoạt động 32 phút trước</span>
-  </div>
-</div>
-
   return (
     <div className="sidebar">
       <h5>Trò chuyện</h5>
 
-      {/* Thanh tìm kiếm & Nút + Nhóm */}
       <div className="search-group">
         <Form.Control
           type="text"
@@ -73,10 +61,17 @@ const Sidebar = ({ setCurrentChat }) => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <Button variant="success" className="add-group-btn" onClick={() => setShowModal(true)}>+</Button>
+        <Button variant="success" className="add-group-btn" onClick={() => setShowModal(true)}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-users-plus">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M20 8v6"></path>
+            <path d="M23 11h-6"></path>
+            <path d="M17 11h6"></path>
+          </svg>
+        </Button>
       </div>
 
-      {/* Danh sách cuộc trò chuyện */}
       <ListGroup variant="flush">
         {chats.map((chat, index) => (
           <ListGroup.Item key={index} className="user-item" onClick={() => setCurrentChat(chat)}>
@@ -92,7 +87,6 @@ const Sidebar = ({ setCurrentChat }) => {
         ))}
       </ListGroup>
 
-      {/* Modal tạo nhóm */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Tạo nhóm chat</Modal.Title>
