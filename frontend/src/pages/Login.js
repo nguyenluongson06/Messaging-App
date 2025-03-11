@@ -1,16 +1,24 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Form, Button } from "react-bootstrap";
+import { login } from "../authService";
 
 const Login = ({ setUser }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setUser({ name: "User", email }); // Giả lập đăng nhập
-    navigate("/chat"); // Chuyển hướng sang trang chat
+    try {
+      const data = await login(email, password);
+      setUser({ name: data.userName, email: data.email });
+      localStorage.setItem("token", data.token);
+      navigate("/chat");
+    } catch (error) {
+      console.error("Login failed:", error.response.data);
+      alert("Login failed: " + error.response.data.error.errorMessage.join(", "));
+    }
   };
 
   return (

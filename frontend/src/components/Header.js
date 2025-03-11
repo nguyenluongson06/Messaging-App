@@ -1,13 +1,20 @@
 import React from "react";
 import { Navbar, Nav, Dropdown } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import { logout } from "../authService";
 
 const Header = () => {
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await logout();
+      localStorage.removeItem("token");
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed:", error.response.data);
+      alert("Logout failed: " + error.response.data.error.errorMessage.join(", "));
+    }
   };
 
   return (
@@ -15,7 +22,7 @@ const Header = () => {
       <Navbar.Brand>Chat-App</Navbar.Brand>
       <Nav className="ms-auto">
         <Dropdown>
-        <Dropdown.Toggle variant="link" id="avatar-dropdown" className="avatar-btn" caret={false}>
+          <Dropdown.Toggle variant="link" id="avatar-dropdown" className="avatar-btn" caret={false}>
             <img
               src="https://tse2.mm.bing.net/th?id=OIP.Siu7xzx1R99lF07TMTwafQHaHR&pid=Api&P=0&h=180" // Thay ảnh avatar tại đây
               alt="Avatar"

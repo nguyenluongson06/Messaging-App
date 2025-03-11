@@ -1,17 +1,25 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Form, Button } from "react-bootstrap";
+import { register } from "../authService";
 
 const Register = ({ setUser }) => {
-  const [fullName, setFullName] = useState("");
+  const [userName, setUserName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    setUser({ name: fullName, email });
-    navigate("/login"); // Chuyển hướng đến trang chat sau khi đăng ký
+    try {
+      const data = await register(userName, email, password);
+      setUser({ name: userName, email });
+      localStorage.setItem("token", data.token);
+      navigate("/login");
+    } catch (error) {
+      console.error("Registration failed:", error.response.data);
+      alert("Registration failed: " + error.response.data.error.errorMessage.join(", "));
+    }
   };
 
   return (
@@ -23,8 +31,8 @@ const Register = ({ setUser }) => {
             <Form.Control
               type="text"
               placeholder="Họ và Tên"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
               required
             />
           </Form.Group>
