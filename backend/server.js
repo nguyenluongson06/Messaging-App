@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const path = require('path');
 const sequelize = require('./config/database');
 const authRoutes = require('./routes/authRoutes');
 const chatRoutes = require('./routes/chatRoutes');
@@ -15,10 +16,16 @@ app.use('/chat', chatRoutes);
 setupSwagger(app); // Setup Swagger
 app.use(errorHandler);
 
+app.use(express.static(path.join(__dirname, '../frontend/build')));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
+});
+
 sequelize
-	.sync({ force: false })
-	.then(() => console.log('Database connected'))
-	.catch((err) => console.error('Database error:', err));
+  .sync({ force: false })
+  .then(() => console.log('Database connected'))
+  .catch((err) => console.error('Database error:', err));
 
 const server = initializeSocketServer(app);
 
