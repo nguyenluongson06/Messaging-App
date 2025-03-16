@@ -1,8 +1,10 @@
 const { RateLimiterMemory } = require('rate-limiter-flexible');
+const { error } = require('winston');
+const logger = require('../logger');
 
 const rateLimiter = new RateLimiterMemory({
-	points: 5, // 5 attempts
-	duration: 300, // per 5 minutes
+	points: 10, // 10 attempts
+	duration: 180, // per 3 minutes
 	blockDuration: 300, // block for 5 minutes
 });
 
@@ -13,9 +15,12 @@ const rateLimiterMiddleware = (req, res, next) => {
 			next();
 		})
 		.catch(() => {
-			res
-				.status(429)
-				.json({ message: 'Bạn đã đăng nhập quá nhiều lần, hãy thử lại sau' });
+			logger.error(`Rate limit exceeded for ${req.body.username}`);
+			res.status(429).json({
+				error: {
+					errorMessage: 'Bạn đã thao tác quá nhiều lần, hãy thử lại sau',
+				},
+			});
 		});
 };
 

@@ -1,6 +1,6 @@
-const { ChatGroup } = require('../models/ChatGroup');
-const { User } = require('../models/User');
-const { GroupMember } = require('../models/GroupMember');
+const ChatGroup = require('../models/ChatGroup');
+const User = require('../models/User');
+const GroupMember = require('../models/GroupMember');
 
 exports.createChatGroup = async (req, res) => {
 	try {
@@ -11,8 +11,13 @@ exports.createChatGroup = async (req, res) => {
 		if (!owner) {
 			return res.status(404).json({ message: 'Owner not found' });
 		}
-
-		const newGroup = await ChatGroup.create({ name, description, owner_id });
+		const uid = Math.random().toString(36).substring(2, 12);
+		const newGroup = await ChatGroup.create({
+			uid: uid,
+			name: name,
+			description: description,
+			owner_id: owner_id,
+		});
 		return res
 			.status(201)
 			.json({ message: 'Chat group created successfully', group: newGroup });

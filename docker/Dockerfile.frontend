@@ -1,5 +1,5 @@
-# Sử dụng Node.js để build ứng dụng frontend
-FROM node:18
+# Use Node.js to build the frontend application
+FROM node:18 AS builder
 
 WORKDIR /app
 
@@ -11,11 +11,17 @@ COPY . .
 
 RUN npm run build
 
-# Sử dụng Nginx để phục vụ frontend
-FROM nginx:stable-alpine
+# Use Node.js to serve the frontend
+FROM node:18-alpine
 
-COPY --from=0 /app/dist /usr/share/nginx/html
+WORKDIR /app
 
-EXPOSE 80
+COPY --from=builder /app/build ./build
+COPY --from=builder /app/server.js ./server.js
+COPY package*.json ./
 
-CMD ["nginx", "-g", "daemon off;"]
+RUN npm install --only=production
+
+EXPOSE 3001
+
+CMD ["node", "server.js"]

@@ -4,6 +4,7 @@ const ChatGroup = require('./ChatGroup');
 const GroupMember = require('./GroupMember');
 const Message = require('./Message');
 const UserKey = require('./UserKey');
+const Friend = require('./Friend'); // Import the Friend model
 
 User.hasMany(ChatGroup, { foreignKey: 'owner_id' });
 ChatGroup.belongsTo(User, { foreignKey: 'owner_id' });
@@ -16,5 +17,18 @@ User.hasMany(Message, { foreignKey: 'sender_id' });
 Message.belongsTo(ChatGroup, { foreignKey: 'group_id' });
 Message.belongsTo(User, { foreignKey: 'sender_id' });
 UserKey.belongsTo(User, { foreignKey: 'user_id' });
+User.belongsToMany(User, {
+	through: Friend,
+	as: 'Friends',
+	foreignKey: 'user1_id',
+});
 
-module.exports = { sequelize, User, ChatGroup, GroupMember, Message, UserKey };
+module.exports = {
+	sequelize,
+	User,
+	ChatGroup,
+	GroupMember,
+	Message,
+	UserKey,
+	Friend,
+};

@@ -1,7 +1,8 @@
 const validator = require('validator');
-const { User } = require('../models/User');
+const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const logger = require('../logger'); // Import the logger
 
 module.exports.userRegister = async (req, res) => {
 	const { userName, email, password } = req.body;
@@ -39,12 +40,17 @@ module.exports.userRegister = async (req, res) => {
 			});
 		}
 
+		logger.info('Creating new user');
+		let uid = Math.random().toString(36).substring(2, 12);
 		const userCreate = await User.create({
-			userName,
-			email,
+			uid: uid,
+			email: email,
+			username: userName,
 			password: await bcrypt.hash(password, 10),
 		});
+		logger.info(`User created: ${JSON.stringify(userCreate)}`);
 
+		logger.info('Creating token');
 		const token = jwt.sign(
 			{
 				id: userCreate.id,
@@ -52,15 +58,18 @@ module.exports.userRegister = async (req, res) => {
 				userName: userCreate.userName,
 				registerTime: userCreate.createdAt,
 			},
-			process.env.JWT_SECRET,
+			process.env.JWT_SECRET || 'your_jwt_secret',
 			{
-				expiresIn: process.env.TOKEN_EXP,
+				expiresIn: process.env.TOKEN_EXP || '1h',
 			},
 		);
+		logger.info(`Token created: ${token}`);
 
+		logger.info('Sending token');
 		const options = {
 			expires: new Date(
-				Date.now() + process.env.COOKIE_EXP * 24 * 60 * 60 * 1000,
+				Date.now() +
+					(parseInt(process.env.COOKIE_EXP) || 7) * 24 * 60 * 60 * 1000,
 			),
 		};
 
@@ -69,6 +78,7 @@ module.exports.userRegister = async (req, res) => {
 			token,
 		});
 	} catch (error) {
+		logger.error(`Error during user registration: ${error.message}`); // Log the error
 		return res.status(500).json({
 			error: {
 				errorMessage: ['Lỗi máy chủ nội bộ'],
@@ -117,7 +127,8 @@ module.exports.userLogin = async (req, res) => {
 
 				const options = {
 					expires: new Date(
-						Date.now() + process.env.COOKIE_EXP * 24 * 60 * 60 * 1000,
+						Date.now() +
+							(parseInt(process.env.COOKIE_EXP) || 7) * 24 * 60 * 60 * 1000,
 					),
 				};
 
