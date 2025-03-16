@@ -55,7 +55,7 @@ module.exports.userRegister = async (req, res) => {
 			{
 				id: userCreate.id,
 				email: userCreate.email,
-				userName: userCreate.userName,
+				userName: userCreate.username,
 				registerTime: userCreate.createdAt,
 			},
 			process.env.JWT_SECRET || 'your_jwt_secret',
@@ -73,10 +73,18 @@ module.exports.userRegister = async (req, res) => {
 			),
 		};
 
-		return res.status(201).cookie('authToken', token, options).json({
-			successMessage: 'Đăng ký thành công',
-			token,
-		});
+		return res
+			.status(201)
+			.cookie('authToken', token, options)
+			.json({
+				successMessage: 'Đăng ký thành công',
+				token,
+				user: {
+					id: userCreate.id,
+					username: userCreate.username,
+					email: userCreate.email,
+				},
+			});
 	} catch (error) {
 		logger.error(`Error during user registration: ${error.message}`); // Log the error
 		return res.status(500).json({
@@ -116,7 +124,7 @@ module.exports.userLogin = async (req, res) => {
 					{
 						id: checkUser.id,
 						email: checkUser.email,
-						userName: checkUser.userName,
+						userName: checkUser.username,
 						registerTime: checkUser.createdAt,
 					},
 					process.env.JWT_SECRET,
@@ -132,10 +140,18 @@ module.exports.userLogin = async (req, res) => {
 					),
 				};
 
-				return res.status(200).cookie('authToken', token, options).json({
-					successMessage: 'Đăng nhập thành công',
-					token,
-				});
+				return res
+					.status(200)
+					.cookie('authToken', token, options)
+					.json({
+						successMessage: 'Đăng nhập thành công',
+						token,
+						user: {
+							id: checkUser.id,
+							username: checkUser.username,
+							email: checkUser.email,
+						},
+					});
 			} else {
 				return res.status(400).json({
 					error: {

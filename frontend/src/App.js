@@ -13,17 +13,21 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 
 const App = () => {
-	const [user, setUser] = useState(null); // Lưu trạng thái đăng nhập
+	const [user, setUser] = useState(() => {
+		const savedUser = localStorage.getItem('user');
+		return savedUser ? JSON.parse(savedUser) : null;
+	});
 
 	return (
 		<Router>
-			<Header user={user} /> {/* Pass user prop to Header */}
+			{user && user.username ? <Header user={user} /> : null}
+			{/* Only show Header if user is logged in */}
 			<Routes>
 				<Route path='/login' element={<Login setUser={setUser} />} />
 				<Route path='/register' element={<Register setUser={setUser} />} />
 				<Route
 					path='/chat'
-					element={user ? <Chat /> : <Navigate to='/login' />}
+					element={user ? <Chat user={user} /> : <Navigate to='/login' />}
 				/>
 				<Route path='*' element={<Navigate to='/login' />} />
 			</Routes>

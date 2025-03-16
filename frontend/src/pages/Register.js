@@ -13,9 +13,9 @@ const Register = ({ setUser }) => {
 		e.preventDefault();
 		try {
 			const data = await register(userName, email, password);
-			setUser({ name: userName, email });
+			setUser({ username: data.user.username, email: data.user.email });
 			localStorage.setItem('token', data.token);
-			navigate('/login');
+			navigate('/chat');
 		} catch (error) {
 			console.error('Registration failed:', error.response.data);
 			alert(
@@ -33,7 +33,7 @@ const Register = ({ setUser }) => {
 					<Form.Group className='form-group'>
 						<Form.Control
 							type='text'
-							placeholder='Họ và Tên'
+							placeholder='Tên người dùng'
 							value={userName}
 							onChange={(e) => setUserName(e.target.value)}
 							required

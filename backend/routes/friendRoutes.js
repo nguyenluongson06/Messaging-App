@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { getFriends } = require('../controllers/friendController');
+const { getFriends, addFriend } = require('../controllers/friendController');
 const { authenticateToken } = require('../middlewares/auth');
 
 /**
@@ -15,5 +15,19 @@ const { authenticateToken } = require('../middlewares/auth');
  *         description: Error fetching friends
  */
 router.get('/', authenticateToken, getFriends);
+
+/**
+ * @swagger
+ * /friends:
+ *   post:
+ *     summary: Add a friend
+ *     tags: [Friends]
+ *     responses:
+ *       201:
+ *         description: Friend added successfully
+ *       500:
+ *         description: Error adding friend
+ */
+router.post('/', authenticateToken, addFriend);
 
 module.exports = router;

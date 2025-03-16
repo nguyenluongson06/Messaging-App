@@ -16,3 +16,19 @@ exports.getFriends = async (req, res) => {
 			.json({ message: 'Error fetching friends', error: error.message });
 	}
 };
+
+exports.addFriend = async (req, res) => {
+	try {
+		const userId = req.user.id;
+		const { friendId } = req.body;
+		const friend = await Friend.create({
+			user1_id: userId,
+			user2_id: friendId,
+		});
+		return res.status(201).json(friend);
+	} catch (error) {
+		return res
+			.status(500)
+			.json({ message: 'Error adding friend', error: error.message });
+	}
+};

@@ -3,24 +3,30 @@ import {
 	Navbar,
 	Nav,
 	Dropdown,
+	Button,
+	Modal,
 	Form,
 	FormControl,
-	Button,
+	ListGroup,
 } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../authService';
 import axios from 'axios';
 
 const Header = ({ user }) => {
+	console.log(user);
 	const navigate = useNavigate();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [searchResults, setSearchResults] = useState([]);
+	const [showModal, setShowModal] = useState(false);
 
 	const handleLogout = async () => {
 		try {
 			await logout();
 			localStorage.removeItem('token');
+			localStorage.removeItem('user');
 			navigate('/login');
+			window.location.reload();
 		} catch (error) {
 			console.error('Logout failed:', error.response.data);
 			alert(
@@ -45,42 +51,87 @@ const Header = ({ user }) => {
 		}
 	};
 
+	const handleAddFriend = async (friendId) => {
+		try {
+			await axios.post(
+				'http://localhost:3000/friends',
+				{ friendId },
+				{
+					headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+				},
+			);
+			alert('Friend added successfully');
+		} catch (error) {
+			console.error('Add friend failed:', error.response.data);
+			alert('Add friend failed: ' + error.response.data.message);
+		}
+	};
+
 	return (
-		<Navbar bg='primary' variant='dark' className='px-3'>
-			<Navbar.Brand>Chat-App</Navbar.Brand>
-			<Form inline onSubmit={handleSearch}>
-				<FormControl
-					type='text'
-					placeholder='Search'
-					className='mr-sm-2'
-					value={searchTerm}
-					onChange={(e) => setSearchTerm(e.target.value)}
-				/>
-				<Button type='submit' variant='outline-light'>
+		<>
+			<Navbar bg='primary' variant='dark' className='px-3'>
+				<Navbar.Brand>Chat-App</Navbar.Brand>
+				<Button variant='outline-light' onClick={() => setShowModal(true)}>
 					Search
 				</Button>
-			</Form>
-			<Nav className='ms-auto'>
-				<Navbar.Text className='mr-3'>Signed in as: {user.name}</Navbar.Text>
-				<Dropdown>
-					<Dropdown.Toggle
-						variant='link'
-						id='avatar-dropdown'
-						className='avatar-btn'
-						caret={false}>
-						<img
-							src='https://tse2.mm.bing.net/th?id=OIP.Siu7xzx1R99lF07TMTwafQHaHR&pid=Api&P=0&h=180'
-							alt='Avatar'
-							className='avatar-img'
+				<Nav className='ms-auto'>
+					<Navbar.Text className='mr-3'>
+						Signed in as: {user && user.username ? user.username : 'Guest'}
+					</Navbar.Text>
+					<Dropdown>
+						<Dropdown.Toggle
+							variant='link'
+							id='avatar-dropdown'
+							className='avatar-btn'
+							caret={false}>
+							<img
+								src='https://tse2.mm.bing.net/th?id=OIP.Siu7xzx1R99lF07TMTwafQHaHR&pid=Api&P=0&h=180'
+								alt='Avatar'
+								className='avatar-img'
+							/>
+						</Dropdown.Toggle>
+						<Dropdown.Menu align='end'>
+							<Dropdown.Item href='avatar.html'>Profile</Dropdown.Item>
+							<Dropdown.Item onClick={handleLogout}>Logout</Dropdown.Item>
+						</Dropdown.Menu>
+					</Dropdown>
+				</Nav>
+			</Navbar>
+
+			<Modal show={showModal} onHide={() => setShowModal(false)}>
+				<Modal.Header closeButton>
+					<Modal.Title>Search Users</Modal.Title>
+				</Modal.Header>
+				<Modal.Body>
+					<Form onSubmit={handleSearch}>
+						<FormControl
+							type='text'
+							placeholder='Search'
+							className='mr-sm-2'
+							value={searchTerm}
+							onChange={(e) => setSearchTerm(e.target.value)}
 						/>
-					</Dropdown.Toggle>
-					<Dropdown.Menu align='end'>
-						<Dropdown.Item href='avatar.html'>Profile</Dropdown.Item>
-						<Dropdown.Item onClick={handleLogout}>Logout</Dropdown.Item>
-					</Dropdown.Menu>
-				</Dropdown>
-			</Nav>
-		</Navbar>
+						<Button type='submit' variant='primary'>
+							Search
+						</Button>
+					</Form>
+					<ListGroup className='mt-3'>
+						{searchResults.map((user) => (
+							<ListGroup.Item key={user.id}>
+								<img src={user.avatar} alt='Avatar' className='avatar-img' />
+								{user.username}
+								<Button
+									variant='success'
+									className='ml-2'
+									onClick={() => handleAddFriend(user.id)}>
+									Add Friend
+								</Button>
+							</ListGroup.Item>
+						))}
+					</ListGroup>
+				</Modal.Body>
+			</Modal>
+		</>
 	);
 };
 
