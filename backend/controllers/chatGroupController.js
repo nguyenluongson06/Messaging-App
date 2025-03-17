@@ -1,4 +1,4 @@
-const { ChatGroup, User, GroupMember } = require('../models/sync');
+const { ChatGroup, User, GroupMember, Message } = require('../models/sync');
 const { Op } = require('sequelize');
 const logger = require('../logger');
 
@@ -109,6 +109,7 @@ exports.updateMemberInGroup = async (req, res) => {
 exports.addMember = async (req, res) => {
 	try {
 		const { group_id, user_id } = req.body;
+		const requesterId = req.user.id;
 
 		const group = await ChatGroup.findByPk(group_id);
 		if (!group) {
@@ -124,23 +125,65 @@ exports.addMember = async (req, res) => {
 			where: { group_id, user_id },
 		});
 		if (existingMember) {
-			return res
-				.status(400)
-				.json({ message: 'User is already a member of the group' });
+			return res.status(400).json({
+				message: 'User is already a member of the group',
+			});
 		}
 
+		// Create new member
 		const newMember = await GroupMember.create({
 			group_id,
 			user_id,
 			role: 'member',
 		});
-		return res
-			.status(201)
-			.json({ message: 'Member added successfully', member: newMember });
+
+		// Create system message
+		const systemMessage = await Message.create({
+			sender_id: requesterId,
+			group_id: group_id,
+			content: `${user.username} was added to the group`,
+			type: 'system',
+		});
+
+		// Get updated group data
+		const updatedGroup = await ChatGroup.findOne({
+			where: { id: group_id },
+			include: [
+				{
+					model: User,
+					as: 'members',
+					attributes: ['id', 'username', 'email'],
+				},
+			],
+		});
+
+		// Send system message and updates through socket
+		if (req.io) {
+			// Emit system message
+			const messageData = {
+				id: systemMessage.id,
+				content: systemMessage.content,
+				type: 'system',
+				created_at: systemMessage.created_at,
+				sender_name: 'System',
+			};
+
+			// Send message to group chat
+			req.io.to(`chat_${group_id}`).emit('message', messageData);
+
+			// Update group data for all members
+			updatedGroup.members.forEach((member) => {
+				req.io.to(`user_${member.id}`).emit('chatGroupUpdated', updatedGroup);
+			});
+		}
+
+		return res.status(201).json(updatedGroup);
 	} catch (error) {
-		return res
-			.status(500)
-			.json({ message: 'Error adding member', error: error.message });
+		logger.error('Error adding member:', error);
+		return res.status(500).json({
+			message: 'Error adding member',
+			error: error.message,
+		});
 	}
 };
 
@@ -209,6 +252,26 @@ exports.removeMember = async (req, res) => {
 			return res.status(400).json({ message: 'Cannot remove the group owner' });
 		}
 
+		// Get user info before removal
+		const removedUser = await User.findByPk(user_id);
+		const systemMessage = await Message.create({
+			sender_id: requesterId,
+			group_id: group_id,
+			content: `${removedUser.username} was removed from the group`,
+			type: 'system',
+		});
+
+		// Send the system message with correct type
+		const messageData = {
+			id: systemMessage.id,
+			content: systemMessage.content,
+			type: 'system',
+			created_at: systemMessage.created_at,
+			sender_name: 'System',
+		};
+
+		req.io.to(`chat_${group_id}`).emit('message', messageData);
+
 		// Remove the member
 		await GroupMember.destroy({
 			where: {
@@ -230,10 +293,26 @@ exports.removeMember = async (req, res) => {
 
 		// Notify all members about the update via socket
 		if (req.io) {
+			// Send the system message
+			const messageData = {
+				id: systemMessage.id,
+				content: systemMessage.content,
+				type: 'system',
+				created_at: systemMessage.created_at,
+			};
+
+			req.io.to(`chat_${group_id}`).emit('message', messageData);
+
 			// Notify removed user
 			req.io.to(`user_${user_id}`).emit('removedFromGroup', {
 				group_id,
 				message: 'You have been removed from the group',
+			});
+
+			// Notify about member removal
+			req.io.to(`chat_${group_id}`).emit('memberRemoved', {
+				username: removedUser.username,
+				group_id,
 			});
 
 			// Notify remaining members
@@ -379,6 +458,15 @@ exports.leaveGroup = async (req, res) => {
 			return res.status(404).json({ message: 'Not a member of this group' });
 		}
 
+		// Get user info before leaving
+		const leavingUser = await User.findByPk(userId);
+		const systemMessage = await Message.create({
+			sender_id: userId,
+			group_id: group_id,
+			content: `${leavingUser.username} left the group`,
+			type: 'system',
+		});
+
 		await member.destroy();
 
 		// Get updated group data
@@ -397,6 +485,24 @@ exports.leaveGroup = async (req, res) => {
 		updatedGroup.members.forEach((member) => {
 			req.io.to(`user_${member.id}`).emit('chatGroupUpdated', updatedGroup);
 		});
+
+		// Notify remaining members
+		if (req.io) {
+			// Send the system message
+			const messageData = {
+				id: systemMessage.id,
+				content: systemMessage.content,
+				type: 'system',
+				created_at: systemMessage.created_at,
+			};
+
+			req.io.to(`chat_${group_id}`).emit('message', messageData);
+
+			req.io.to(`chat_${group_id}`).emit('memberLeft', {
+				username: leavingUser.username,
+				group_id,
+			});
+		}
 
 		return res.status(200).json({ message: 'Successfully left the group' });
 	} catch (error) {

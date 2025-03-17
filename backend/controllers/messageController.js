@@ -19,13 +19,14 @@ exports.getChatMessages = async (req, res) => {
 			order: [['created_at', 'ASC']],
 		});
 
-		// Transform messages to include sender info directly
+		// Transform messages to include sender info and type
 		const transformedMessages = messages.map((msg) => ({
 			id: msg.id,
 			content: msg.content,
 			sender_id: msg.sender_id,
 			sender_name: msg.sender.username,
 			created_at: msg.created_at,
+			type: msg.type, // Add this line
 		}));
 
 		logger.info(`Found ${messages.length} messages`);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Form, Button, Image } from 'react-bootstrap';
 import Message from './Message';
+import SystemMessage from './SystemMessage';
 import { FiPhone, FiVideo, FiInfo } from 'react-icons/fi';
 import io from 'socket.io-client';
 import axios from 'axios';
@@ -81,11 +82,13 @@ const ChatWindow = ({ user, currentChat, setCurrentChat }) => {
 				isSender: message.sender_id === user.id,
 			});
 
-			const messageWithSender = {
+			const newMessage = {
 				...message,
+				type: message.type || 'text', // Ensure type is set
 				sender_name: message.sender_name || 'Unknown',
 			};
-			setMessages((prev) => [...prev, messageWithSender]);
+
+			setMessages((prev) => [...prev, newMessage]);
 			messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
 		};
 
@@ -157,17 +160,28 @@ const ChatWindow = ({ user, currentChat, setCurrentChat }) => {
 
 	// Optimize message rendering
 	const renderMessage = React.useCallback(
-		(msg, index) => {
+		(msg) => {
+			// Add debug logging
 			console.log('Rendering message:', {
-				messageId: msg.id,
-				senderId: msg.sender_id,
-				currentUserId: user.id,
-				isSentByCurrentUser: msg.sender_id === user.id,
+				id: msg.id,
+				type: msg.type,
+				content: msg.content,
+				sender: msg.sender_name,
 			});
+
+			if (msg.type === 'system') {
+				return (
+					<SystemMessage
+						key={msg.id}
+						text={msg.content}
+						timestamp={msg.created_at}
+					/>
+				);
+			}
 
 			return (
 				<Message
-					key={msg.id || index}
+					key={msg.id}
 					text={msg.content}
 					sender={msg.sender_name}
 					timestamp={msg.created_at}

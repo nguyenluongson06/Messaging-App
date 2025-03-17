@@ -27,7 +27,7 @@ const Message = sequelize.define(
 			allowNull: false,
 		},
 		type: {
-			type: DataTypes.ENUM('text', 'image', 'file'),
+			type: DataTypes.ENUM('text', 'image', 'file', 'system'),
 			defaultValue: 'text',
 		},
 		created_at: {

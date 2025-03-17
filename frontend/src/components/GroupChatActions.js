@@ -59,7 +59,7 @@ const GroupChatActions = ({ show, onHide, chat, currentUser, onUpdate }) => {
 
 	const removeMember = async (userId) => {
 		try {
-			const response = await axios.post(
+			await axios.post(
 				'http://localhost:3000/api/chats/remove-member',
 				{
 					group_id: chat.id,
@@ -73,22 +73,10 @@ const GroupChatActions = ({ show, onHide, chat, currentUser, onUpdate }) => {
 				},
 			);
 
-			if (response.data) {
-				onUpdate();
-				// If the removed user is the current user, close the modal
-				if (userId === currentUser.id) {
-					onHide();
-				}
-			}
+			onUpdate();
 		} catch (error) {
-			console.error(
-				'Error removing member:',
-				error.response?.data || error.message,
-			);
-			alert(
-				'Failed to remove member: ' +
-					(error.response?.data?.message || 'Unknown error'),
-			);
+			console.error('Error removing member:', error);
+			alert('Failed to remove member');
 		}
 	};
 
@@ -105,6 +93,7 @@ const GroupChatActions = ({ show, onHide, chat, currentUser, onUpdate }) => {
 			onHide();
 		} catch (error) {
 			console.error('Error leaving group:', error);
+			alert('Failed to leave group');
 		}
 	};
 

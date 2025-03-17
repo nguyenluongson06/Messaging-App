@@ -64,7 +64,7 @@ function initializeSocketServer(app) {
 		// Handle messages
 		socket.on('sendMessage', async (data) => {
 			try {
-				const { chatId, content } = data;
+				const { chatId, content, type = 'text' } = data;
 				logger.info(
 					`New message from ${socket.user.id} to ${chatId}: ${content}`,
 				);
@@ -74,7 +74,7 @@ function initializeSocketServer(app) {
 					sender_id: socket.user.id,
 					group_id: chatId,
 					content: content,
-					type: 'text',
+					type: type,
 				});
 
 				const messageWithSender = await Message.findOne({
@@ -94,6 +94,7 @@ function initializeSocketServer(app) {
 					sender_id: messageWithSender.sender_id,
 					sender_name: messageWithSender.sender.username,
 					created_at: messageWithSender.created_at,
+					type: messageWithSender.type, // Add this line
 				};
 
 				// Emit to the room
