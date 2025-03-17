@@ -13,14 +13,20 @@ const Register = ({ setUser }) => {
 		e.preventDefault();
 		try {
 			const data = await register(userName, email, password);
-			setUser({ username: data.user.username, email: data.user.email });
+			const userData = {
+				id: data.user.id, // Add this
+				username: data.user.username,
+				email: data.user.email,
+			};
+			setUser(userData);
 			localStorage.setItem('token', data.token);
+			localStorage.setItem('user', JSON.stringify(userData));
 			navigate('/chat');
 		} catch (error) {
-			console.error('Registration failed:', error.response.data);
+			console.error('Registration failed:', error.response?.data);
 			alert(
 				'Registration failed: ' +
-					error.response.data.error.errorMessage.join(', '),
+					error.response?.data?.error?.errorMessage?.join(', '),
 			);
 		}
 	};

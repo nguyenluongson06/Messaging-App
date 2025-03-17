@@ -12,20 +12,20 @@ const Login = ({ setUser }) => {
 		e.preventDefault();
 		try {
 			const data = await login(email, password);
-			setUser({ username: data.user.username, email: data.user.email });
+			const userData = {
+				id: data.user.id,
+				username: data.user.username,
+				email: data.user.email,
+			};
+			setUser(userData);
 			localStorage.setItem('token', data.token);
-			localStorage.setItem(
-				'user',
-				JSON.stringify({
-					username: data.user.username,
-					email: data.user.email,
-				}),
-			);
+			localStorage.setItem('user', JSON.stringify(userData));
 			navigate('/chat');
 		} catch (error) {
-			console.error('Login failed:', error.response.data);
+			console.error('Login failed:', error.response?.data);
 			alert(
-				'Login failed: ' + error.response.data.error.errorMessage.join(', '),
+				'Login failed: ' +
+					error.response?.data?.error?.errorMessage?.join(', '),
 			);
 		}
 	};

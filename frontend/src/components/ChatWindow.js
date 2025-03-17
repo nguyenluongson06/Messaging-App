@@ -20,6 +20,15 @@ const ChatWindow = ({ user, currentChat }) => {
 		console.log('Current chat:', currentChat);
 	}, [currentChat]);
 
+	// Add validation for user
+	useEffect(() => {
+		if (!user || !user.id) {
+			console.error('Invalid user data:', user);
+			return;
+		}
+		console.log('ChatWindow user:', user);
+	}, [user]);
+
 	// Initialize socket connection
 	useEffect(() => {
 		const token = localStorage.getItem('token');
@@ -64,9 +73,10 @@ const ChatWindow = ({ user, currentChat }) => {
 		socket.emit('joinRoom', roomId);
 
 		const messageHandler = (message) => {
-			console.log('Message handler - Current user:', {
-				userId: user.id,
-				messageFrom: message.sender_id,
+			console.log('Message received:', {
+				message,
+				currentUser: user,
+				isSender: message.sender_id === user.id,
 			});
 
 			const messageWithSender = {
@@ -122,6 +132,30 @@ const ChatWindow = ({ user, currentChat }) => {
 		setInput('');
 	};
 
+	// Optimize message rendering
+	const renderMessage = React.useCallback(
+		(msg, index) => {
+			console.log('Rendering message:', {
+				messageId: msg.id,
+				senderId: msg.sender_id,
+				currentUserId: user.id,
+				isSentByCurrentUser: msg.sender_id === user.id,
+			});
+
+			return (
+				<Message
+					key={msg.id || index}
+					text={msg.content}
+					sender={msg.sender_name}
+					timestamp={msg.created_at}
+					currentUserId={user.id}
+					senderId={msg.sender_id}
+				/>
+			);
+		},
+		[user.id],
+	);
+
 	return (
 		<div className='chat-container'>
 			<div className='chat-header'>
@@ -150,24 +184,7 @@ const ChatWindow = ({ user, currentChat }) => {
 
 			<div className='chat-box'>
 				<div className='messages'>
-					{messages.map((msg, index) => {
-						console.log('Rendering message:', {
-							messageId: msg.id,
-							senderId: msg.sender_id,
-							currentUserId: user.id,
-						});
-
-						return (
-							<Message
-								key={msg.id || index}
-								text={msg.content}
-								sender={msg.sender_name}
-								timestamp={msg.created_at}
-								currentUserId={user.id}
-								senderId={msg.sender_id}
-							/>
-						);
-					})}
+					{messages.map(renderMessage)}
 					<div ref={messagesEndRef} />
 				</div>
 				<Form className='input-area' onSubmit={sendMessage}>

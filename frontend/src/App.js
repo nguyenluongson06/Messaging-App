@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
 	BrowserRouter as Router,
 	Routes,
@@ -18,6 +18,16 @@ const App = () => {
 		return savedUser ? JSON.parse(savedUser) : null;
 	});
 
+	// Add validation for user data
+	useEffect(() => {
+		if (user && !user.id) {
+			// If user exists but has no ID, log out
+			localStorage.removeItem('user');
+			localStorage.removeItem('token');
+			setUser(null);
+		}
+	}, [user]);
+
 	return (
 		<Router>
 			{user && user.username ? <Header user={user} /> : null}
@@ -27,7 +37,9 @@ const App = () => {
 				<Route path='/register' element={<Register setUser={setUser} />} />
 				<Route
 					path='/chat'
-					element={user ? <Chat user={user} /> : <Navigate to='/login' />}
+					element={
+						user && user.id ? <Chat user={user} /> : <Navigate to='/login' />
+					}
 				/>
 				<Route path='*' element={<Navigate to='/login' />} />
 			</Routes>
