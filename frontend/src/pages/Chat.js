@@ -1,21 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import Header from '../components/Header';
+import { Container, Row, Col } from 'react-bootstrap';
 import Sidebar from '../components/Sidebar';
 import ChatWindow from '../components/ChatWindow';
-import { Container, Row, Col, Button } from 'react-bootstrap';
 
 const Chat = ({ user }) => {
 	const [currentChat, setCurrentChat] = useState(null);
 	const navigate = useNavigate();
 
-	// Add debug logging for user
-	console.log('Chat component user:', user);
-
-	// Improved validation
 	if (!user || !user.id) {
 		console.error('No valid user data:', user);
-		localStorage.removeItem('user'); // Clear invalid user data
+		localStorage.removeItem('user');
 		localStorage.removeItem('token');
 		return <Navigate to='/login' />;
 	}
@@ -31,7 +26,8 @@ const Chat = ({ user }) => {
 						<ChatWindow
 							user={user}
 							currentChat={currentChat}
-							key={currentChat.id} // Add key to force remount on chat change
+							setCurrentChat={setCurrentChat}
+							key={currentChat.id}
 						/>
 					) : (
 						<div className='d-flex justify-content-center align-items-center h-100'>

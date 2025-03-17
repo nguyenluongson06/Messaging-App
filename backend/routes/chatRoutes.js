@@ -2,43 +2,37 @@ const express = require('express');
 const router = express.Router();
 const {
 	createChatGroup,
-	updateMemberInGroup,
+	updateChatGroup,
 	addMember,
 	removeMember,
-	getUserChats, // Add this import
+	leaveGroup,
+	getUserChats,
+	getChatGroup,
 } = require('../controllers/chatGroupController');
 const { authenticateToken, isGroupOwner } = require('../middlewares/auth');
 const {
 	validateGroupCreation,
 	validateGroupMemberOperation,
 } = require('../middlewares/validation');
+const logger = require('../logger');
 
-// Add GET route for fetching user's chats
+// Debug middleware for remove-member route
+const debugRemoveMember = (req, res, next) => {
+	logger.debug('Remove member request received:', {
+		body: req.body,
+		auth: req.headers.authorization ? 'Token present' : 'No token',
+		user: req.user,
+	});
+	next();
+};
+
+// Get all user's chats
 router.get('/', authenticateToken, getUserChats);
 
-/**
- * @swagger
- * /chat/create:
- *   post:
- *     summary: Create a new chat group
- *     tags: [Chat]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               description:
- *                 type: string
- *     responses:
- *       201:
- *         description: Chat group created successfully
- *       400:
- *         description: Bad request
- */
+// Get specific chat group
+router.get('/:id', authenticateToken, getChatGroup);
+
+// Create new chat group
 router.post(
 	'/create',
 	authenticateToken,
@@ -46,64 +40,10 @@ router.post(
 	createChatGroup,
 );
 
-/**
- * @swagger
- * /chat/updateMemberInGroup:
- *   put:
- *     summary: Update a member in a chat group
- *     tags: [Chat]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               group_id:
- *                 type: string
- *               user_id:
- *                 type: string
- *               role:
- *                 type: string
- *               alias:
- *                 type: string
- *     responses:
- *       200:
- *         description: Member updated successfully
- *       400:
- *         description: Bad request
- */
-router.put(
-	'/updateMemberInGroup',
-	authenticateToken,
-	isGroupOwner,
-	validateGroupMemberOperation,
-	updateMemberInGroup,
-);
+// Update chat group name
+router.put('/:id', authenticateToken, isGroupOwner, updateChatGroup);
 
-/**
- * @swagger
- * /chat/add-member:
- *   post:
- *     summary: Add a member to a chat group
- *     tags: [Chat]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               group_id:
- *                 type: string
- *               user_id:
- *                 type: string
- *     responses:
- *       201:
- *         description: Member added successfully
- *       400:
- *         description: Bad request
- */
+// Add member to group
 router.post(
 	'/add-member',
 	authenticateToken,
@@ -112,35 +52,17 @@ router.post(
 	addMember,
 );
 
-/**
- * @swagger
- * /chat/remove-member:
- *   post:
- *     summary: Remove a member from a chat group
- *     tags: [Chat]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               group_id:
- *                 type: string
- *               user_id:
- *                 type: string
- *     responses:
- *       200:
- *         description: Member removed successfully
- *       400:
- *         description: Bad request
- */
+// Remove member from group
 router.post(
 	'/remove-member',
 	authenticateToken,
 	isGroupOwner,
 	validateGroupMemberOperation,
+	debugRemoveMember,
 	removeMember,
 );
+
+// Leave group
+router.post('/leave', authenticateToken, leaveGroup);
 
 module.exports = router;

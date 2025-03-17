@@ -4,12 +4,14 @@ import Message from './Message';
 import { FiPhone, FiVideo, FiInfo } from 'react-icons/fi';
 import io from 'socket.io-client';
 import axios from 'axios';
+import GroupChatActions from './GroupChatActions';
 
-const ChatWindow = ({ user, currentChat }) => {
+const ChatWindow = ({ user, currentChat, setCurrentChat }) => {
 	const [messages, setMessages] = useState([]);
 	const [input, setInput] = useState('');
 	const [socket, setSocket] = useState(null);
 	const messagesEndRef = useRef(null);
+	const [showGroupActions, setShowGroupActions] = useState(false);
 
 	// Add validation for currentChat
 	useEffect(() => {
@@ -119,6 +121,27 @@ const ChatWindow = ({ user, currentChat }) => {
 		messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
 	}, [messages]);
 
+	useEffect(() => {
+		if (!socket) return;
+
+		socket.on('removedFromGroup', (data) => {
+			if (data.group_id === currentChat?.id) {
+				setCurrentChat(null);
+			}
+		});
+
+		socket.on('chatGroupUpdated', (updatedGroup) => {
+			if (updatedGroup.id === currentChat?.id) {
+				setCurrentChat(updatedGroup);
+			}
+		});
+
+		return () => {
+			socket.off('removedFromGroup');
+			socket.off('chatGroupUpdated');
+		};
+	}, [socket, currentChat, setCurrentChat]);
+
 	const sendMessage = (e) => {
 		e.preventDefault();
 		if (input.trim() === '' || !socket || !currentChat) return;
@@ -156,6 +179,20 @@ const ChatWindow = ({ user, currentChat }) => {
 		[user.id],
 	);
 
+	const handleGroupUpdate = async () => {
+		try {
+			const response = await axios.get(
+				`http://localhost:3000/api/chats/${currentChat.id}`,
+				{
+					headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+				},
+			);
+			setCurrentChat(response.data);
+		} catch (error) {
+			console.error('Error updating chat:', error);
+		}
+	};
+
 	return (
 		<div className='chat-container'>
 			<div className='chat-header'>
@@ -176,9 +213,13 @@ const ChatWindow = ({ user, currentChat }) => {
 					<button className='icon-btn'>
 						<FiVideo />
 					</button>
-					<button className='icon-btn'>
-						<FiInfo />
-					</button>
+					{currentChat?.type === 'group' && (
+						<button
+							className='icon-btn'
+							onClick={() => setShowGroupActions(true)}>
+							<FiInfo />
+						</button>
+					)}
 				</div>
 			</div>
 
@@ -199,6 +240,16 @@ const ChatWindow = ({ user, currentChat }) => {
 					</Button>
 				</Form>
 			</div>
+
+			{currentChat?.type === 'group' && (
+				<GroupChatActions
+					show={showGroupActions}
+					onHide={() => setShowGroupActions(false)}
+					chat={currentChat}
+					currentUser={user}
+					onUpdate={handleGroupUpdate}
+				/>
+			)}
 		</div>
 	);
 };

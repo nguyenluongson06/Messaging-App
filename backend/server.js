@@ -39,6 +39,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/friends', friendRoutes);
 app.use('/api/messages', messageRoutes);
+// Add to existing routes
+app.use('/api/users', require('./routes/userRoutes'));
 
 // API Documentation
 setupSwagger(app);

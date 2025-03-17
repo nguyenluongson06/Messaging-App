@@ -1,36 +1,37 @@
 const jwt = require('jsonwebtoken');
-const { User } = require('../models/sync');
+const { User, ChatGroup } = require('../models/sync');
 const logger = require('../logger');
 
-const authenticateToken = async (req, res, next) => {
+exports.authenticateToken = async (req, res, next) => {
 	try {
 		const authHeader = req.headers['authorization'];
 		const token = authHeader && authHeader.split(' ')[1];
 
 		if (!token) {
+			logger.warn('No token provided');
 			return res.status(401).json({ message: 'No token provided' });
 		}
 
 		const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-		// Fetch complete user object
-		const user = await User.findByPk(decoded.id, {
-			attributes: ['id', 'username', 'email'],
-		});
+		// Add debug logging
+		logger.debug('Token decoded:', { userId: decoded.id });
 
+		const user = await User.findByPk(decoded.id);
 		if (!user) {
+			logger.warn('User not found for token');
 			return res.status(404).json({ message: 'User not found' });
 		}
 
 		req.user = user;
 		next();
 	} catch (error) {
-		logger.error('Auth error:', error);
+		logger.error('Authentication error:', error);
 		return res.status(403).json({ message: 'Invalid token' });
 	}
 };
 
-const isGroupOwner = async (req, res, next) => {
+exports.isGroupOwner = async (req, res, next) => {
 	const { group_id } = req.body;
 	const group = await ChatGroup.findOne({ where: { id: group_id } });
 	if (!group) return res.status(404).json({ message: 'Group not found.' });
@@ -43,7 +44,7 @@ const isGroupOwner = async (req, res, next) => {
 	next();
 };
 
-const socketAuth = (socket, next) => {
+exports.socketAuth = (socket, next) => {
 	try {
 		const token = socket.handshake.auth.token;
 
@@ -68,5 +69,3 @@ const socketAuth = (socket, next) => {
 		next(new Error('Authentication error'));
 	}
 };
-
-module.exports = { authenticateToken, isGroupOwner, socketAuth };

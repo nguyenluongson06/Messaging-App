@@ -14,6 +14,8 @@ const Sidebar = ({ setCurrentChat, user }) => {
 	const [socket, setSocket] = useState(null);
 	const [showToast, setShowToast] = useState(false);
 	const [toastMessage, setToastMessage] = useState('');
+	const [searchQuery, setSearchQuery] = useState('');
+	const [searchResults, setSearchResults] = useState([]);
 
 	// Initialize socket connection
 	useEffect(() => {
@@ -176,10 +178,135 @@ const Sidebar = ({ setCurrentChat, user }) => {
 		}
 	};
 
+	// Add search users function
+	const searchUsers = async () => {
+		try {
+			const response = await axios.get(
+				`http://localhost:3000/api/users/search?username=${searchQuery}`,
+				{
+					headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+				},
+			);
+			setSearchResults(response.data.filter((u) => u.id !== user.id));
+		} catch (error) {
+			console.error('Error searching users:', error);
+		}
+	};
+
+	// Add handler for selecting users
+	const handleAddToGroup = (selectedUser) => {
+		if (!selectedUsers.find((u) => u.id === selectedUser.id)) {
+			setSelectedUsers([...selectedUsers, selectedUser]);
+		}
+	};
+
+	// Add handler for removing selected users
+	const handleRemoveFromGroup = (userId) => {
+		setSelectedUsers(selectedUsers.filter((u) => u.id !== userId));
+	};
+
+	// Update the group creation modal
+	const renderGroupCreationModal = () => (
+		<Modal
+			show={showModal}
+			onHide={() => {
+				setShowModal(false);
+				setSelectedUsers([]);
+				setGroupName('');
+				setSearchQuery('');
+				setSearchResults([]);
+			}}>
+			<Modal.Header closeButton>
+				<Modal.Title>Tạo nhóm chat mới</Modal.Title>
+			</Modal.Header>
+			<Modal.Body>
+				<Form.Group className='mb-3'>
+					<Form.Label>Tên nhóm</Form.Label>
+					<Form.Control
+						type='text'
+						placeholder='Nhập tên nhóm...'
+						value={groupName}
+						onChange={(e) => setGroupName(e.target.value)}
+					/>
+				</Form.Group>
+
+				<Form.Group className='mb-3'>
+					<Form.Label>Thêm thành viên</Form.Label>
+					<div className='d-flex gap-2'>
+						<Form.Control
+							type='text'
+							placeholder='Tìm kiếm theo tên...'
+							value={searchQuery}
+							onChange={(e) => setSearchQuery(e.target.value)}
+						/>
+						<Button onClick={searchUsers}>Tìm</Button>
+					</div>
+				</Form.Group>
+
+				{/* Selected users display */}
+				{selectedUsers.length > 0 && (
+					<div className='selected-users mb-3'>
+						<small className='text-muted'>Thành viên đã chọn:</small>
+						<div className='d-flex flex-wrap gap-2 mt-2'>
+							{selectedUsers.map((user) => (
+								<span
+									key={user.id}
+									className='badge bg-primary d-flex align-items-center gap-2'>
+									{user.username}
+									<button
+										type='button'
+										className='btn-close btn-close-white'
+										onClick={() => handleRemoveFromGroup(user.id)}
+									/>
+								</span>
+							))}
+						</div>
+					</div>
+				)}
+
+				{/* Search results */}
+				{searchResults.length > 0 && (
+					<ListGroup className='mt-3'>
+						{searchResults.map((user) => (
+							<ListGroup.Item
+								key={user.id}
+								className='d-flex justify-content-between align-items-center'>
+								<span>{user.username}</span>
+								<Button
+									size='sm'
+									onClick={() => handleAddToGroup(user)}
+									disabled={selectedUsers.some((u) => u.id === user.id)}>
+									{selectedUsers.some((u) => u.id === user.id)
+										? 'Đã thêm'
+										: 'Thêm vào nhóm'}
+								</Button>
+							</ListGroup.Item>
+						))}
+					</ListGroup>
+				)}
+			</Modal.Body>
+			<Modal.Footer>
+				<Button variant='secondary' onClick={() => setShowModal(false)}>
+					Hủy
+				</Button>
+				<Button
+					variant='primary'
+					onClick={handleCreateGroup}
+					disabled={!groupName.trim() || selectedUsers.length === 0}>
+					Tạo nhóm
+				</Button>
+			</Modal.Footer>
+		</Modal>
+	);
+
 	return (
 		<div className='sidebar'>
-			<h5>Trò chuyện</h5>
-			{/* Search and create group button */}
+			<div className='d-flex justify-content-between align-items-center mb-3'>
+				<h5 className='mb-0'>Trò chuyện</h5>
+				<Button variant='primary' size='sm' onClick={() => setShowModal(true)}>
+					Tạo nhóm
+				</Button>
+			</div>
 
 			<ListGroup>
 				{chats.map((chat) => (
@@ -204,50 +331,7 @@ const Sidebar = ({ setCurrentChat, user }) => {
 				))}
 			</ListGroup>
 
-			{/* Group creation modal */}
-			<Modal show={showModal} onHide={() => setShowModal(false)}>
-				<Modal.Header closeButton>
-					<Modal.Title>Tạo nhóm chat</Modal.Title>
-				</Modal.Header>
-				<Modal.Body>
-					<Form.Control
-						type='text'
-						placeholder='Nhập tên nhóm...'
-						className='mb-3'
-						value={groupName}
-						onChange={(e) => setGroupName(e.target.value)}
-					/>
-					<ListGroup>
-						{friends.map((friend, index) => (
-							<ListGroup.Item
-								key={index}
-								onClick={() => handleSelectUser(friend)}
-								style={{
-									cursor: 'pointer',
-									background: selectedUsers.some((u) => u.id === friend.id)
-										? '#d3f9d8'
-										: 'white',
-								}}>
-								<Image
-									src='https://tse2.mm.bing.net/th?id=OIP.Siu7xzx1R99lF07TMTwafQHaHR&pid=Api&P=0&h=180'
-									roundedCircle
-									className='user-avatar'
-								/>
-								{friend.username}{' '}
-								{selectedUsers.some((u) => u.id === friend.id) ? '✅' : ''}
-							</ListGroup.Item>
-						))}
-					</ListGroup>
-				</Modal.Body>
-				<Modal.Footer>
-					<Button variant='secondary' onClick={() => setShowModal(false)}>
-						Hủy
-					</Button>
-					<Button variant='primary' onClick={handleCreateGroup}>
-						Tạo nhóm
-					</Button>
-				</Modal.Footer>
-			</Modal>
+			{renderGroupCreationModal()}
 
 			{/* Toast notification */}
 			<Toast

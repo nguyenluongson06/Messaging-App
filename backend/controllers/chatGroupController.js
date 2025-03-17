@@ -147,30 +147,111 @@ exports.addMember = async (req, res) => {
 exports.removeMember = async (req, res) => {
 	try {
 		const { group_id, user_id } = req.body;
+		const requesterId = req.user?.id;
 
-		const group = await ChatGroup.findByPk(group_id);
+		// Add debug logging
+		logger.debug('Remove member request:', {
+			group_id,
+			user_id,
+			requesterId,
+			headers: req.headers,
+		});
+
+		if (!requesterId) {
+			logger.error('No requester ID found in token');
+			return res.status(401).json({
+				message: 'Authentication failed - no user ID found',
+			});
+		}
+
+		// Find the chat group
+		const group = await ChatGroup.findByPk(group_id, {
+			include: [
+				{
+					model: User,
+					as: 'members',
+					attributes: ['id', 'username', 'email'],
+				},
+			],
+		});
+
 		if (!group) {
+			logger.warn(`Group not found: ${group_id}`);
 			return res.status(404).json({ message: 'Group not found' });
 		}
 
-		const user = await User.findOne({ where: { id: user_id } });
-		if (!user) {
-			return res.status(404).json({ message: 'User not found' });
+		// Check if requester is the group owner
+		if (group.owner_id !== requesterId) {
+			logger.warn(
+				`Unauthorized removal attempt: ${requesterId} tried to remove ${user_id} from group ${group_id}`,
+			);
+			return res.status(403).json({
+				message: 'Only group owner can remove members',
+			});
 		}
 
-		const member = await GroupMember.findOne({ where: { group_id, user_id } });
-		if (!member) {
+		// Check if user to remove exists in group
+		const memberExists = await GroupMember.findOne({
+			where: {
+				group_id,
+				user_id,
+			},
+		});
+
+		if (!memberExists) {
 			return res
 				.status(404)
-				.json({ message: 'User is not a member of the group' });
+				.json({ message: 'User is not a member of this group' });
 		}
 
-		await member.destroy();
-		return res.status(200).json({ message: 'Member removed successfully' });
+		// Cannot remove the owner
+		if (user_id === group.owner_id) {
+			return res.status(400).json({ message: 'Cannot remove the group owner' });
+		}
+
+		// Remove the member
+		await GroupMember.destroy({
+			where: {
+				group_id,
+				user_id,
+			},
+		});
+
+		// Get updated group data
+		const updatedGroup = await ChatGroup.findByPk(group_id, {
+			include: [
+				{
+					model: User,
+					as: 'members',
+					attributes: ['id', 'username', 'email'],
+				},
+			],
+		});
+
+		// Notify all members about the update via socket
+		if (req.io) {
+			// Notify removed user
+			req.io.to(`user_${user_id}`).emit('removedFromGroup', {
+				group_id,
+				message: 'You have been removed from the group',
+			});
+
+			// Notify remaining members
+			updatedGroup.members.forEach((member) => {
+				req.io.to(`user_${member.id}`).emit('chatGroupUpdated', updatedGroup);
+			});
+		}
+
+		logger.info(
+			`User ${user_id} removed from group ${group_id} by ${requesterId}`,
+		);
+		return res.status(200).json(updatedGroup);
 	} catch (error) {
-		return res
-			.status(500)
-			.json({ message: 'Error removing member', error: error.message });
+		logger.error('Error removing member:', error);
+		return res.status(500).json({
+			message: 'Error removing member from group',
+			error: error.message,
+		});
 	}
 };
 
@@ -197,5 +278,129 @@ exports.getUserChats = async (req, res) => {
 	} catch (error) {
 		logger.error('Error fetching chats:', error);
 		return res.status(500).json({ message: 'Error fetching chats' });
+	}
+};
+
+// Get specific chat group
+exports.getChatGroup = async (req, res) => {
+	try {
+		const groupId = req.params.id;
+		const userId = req.user.id;
+
+		const chat = await ChatGroup.findOne({
+			where: { id: groupId },
+			include: [
+				{
+					model: User,
+					as: 'members',
+					attributes: ['id', 'username', 'email'],
+				},
+			],
+		});
+
+		if (!chat) {
+			return res.status(404).json({ message: 'Chat group not found' });
+		}
+
+		// Verify user is member of the group
+		if (!chat.members.some((member) => member.id === userId)) {
+			return res.status(403).json({ message: 'Not a member of this group' });
+		}
+
+		return res.status(200).json(chat);
+	} catch (error) {
+		logger.error('Error fetching chat group:', error);
+		return res.status(500).json({ message: 'Error fetching chat group' });
+	}
+};
+
+// Update chat group name
+exports.updateChatGroup = async (req, res) => {
+	try {
+		const { id } = req.params;
+		const { name } = req.body;
+
+		const chat = await ChatGroup.findByPk(id);
+		if (!chat) {
+			return res.status(404).json({ message: 'Chat group not found' });
+		}
+
+		chat.name = name;
+		await chat.save();
+
+		// Get updated chat with members
+		const updatedChat = await ChatGroup.findOne({
+			where: { id },
+			include: [
+				{
+					model: User,
+					as: 'members',
+					attributes: ['id', 'username', 'email'],
+				},
+			],
+		});
+
+		// Notify all members about the update
+		updatedChat.members.forEach((member) => {
+			req.io.to(`user_${member.id}`).emit('chatGroupUpdated', updatedChat);
+		});
+
+		return res.status(200).json(updatedChat);
+	} catch (error) {
+		logger.error('Error updating chat group:', error);
+		return res.status(500).json({ message: 'Error updating chat group' });
+	}
+};
+
+// Leave group
+exports.leaveGroup = async (req, res) => {
+	try {
+		const { group_id } = req.body;
+		const userId = req.user.id;
+
+		const group = await ChatGroup.findByPk(group_id);
+		if (!group) {
+			return res.status(404).json({ message: 'Group not found' });
+		}
+
+		// Check if user is the owner
+		if (group.owner_id === userId) {
+			return res.status(400).json({
+				message:
+					'Group owner cannot leave. Transfer ownership first or delete the group.',
+			});
+		}
+
+		const member = await GroupMember.findOne({
+			where: { group_id, user_id: userId },
+		});
+
+		if (!member) {
+			return res.status(404).json({ message: 'Not a member of this group' });
+		}
+
+		await member.destroy();
+
+		// Get updated group data
+		const updatedGroup = await ChatGroup.findOne({
+			where: { id: group_id },
+			include: [
+				{
+					model: User,
+					as: 'members',
+					attributes: ['id', 'username', 'email'],
+				},
+			],
+		});
+
+		// Notify remaining members
+		updatedGroup.members.forEach((member) => {
+			req.io.to(`user_${member.id}`).emit('chatGroupUpdated', updatedGroup);
+		});
+
+		return res.status(200).json({ message: 'Successfully left the group' });
+	} catch (error) {
+		logger.error('Error leaving group:', error);
+		return res.status(500).json({ message: 'Error leaving group' });
 	}
 };
