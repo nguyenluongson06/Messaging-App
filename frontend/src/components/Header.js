@@ -14,7 +14,6 @@ import { logout } from '../authService';
 import axios from 'axios';
 
 const Header = ({ user }) => {
-	console.log(user);
 	const navigate = useNavigate();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [searchResults, setSearchResults] = useState([]);
@@ -39,7 +38,7 @@ const Header = ({ user }) => {
 		e.preventDefault();
 		try {
 			const response = await axios.get(
-				`http://localhost:3000/auth/find?query=${searchTerm}`,
+				`http://localhost:3000/api/auth/find?query=${searchTerm}`,
 				{
 					headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
 				},
@@ -54,16 +53,20 @@ const Header = ({ user }) => {
 	const handleAddFriend = async (friendId) => {
 		try {
 			await axios.post(
-				'http://localhost:3000/friends',
+				'http://localhost:3000/api/friends',
 				{ friendId },
 				{
 					headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
 				},
 			);
 			alert('Friend added successfully');
+			setShowModal(false); // Close the search modal
 		} catch (error) {
-			console.error('Add friend failed:', error.response.data);
-			alert('Add friend failed: ' + error.response.data.message);
+			console.error('Add friend failed:', error);
+			alert(
+				'Failed to add friend: ' +
+					(error.response?.data?.message || error.message),
+			);
 		}
 	};
 
@@ -118,7 +121,11 @@ const Header = ({ user }) => {
 					<ListGroup className='mt-3'>
 						{searchResults.map((user) => (
 							<ListGroup.Item key={user.id}>
-								<img src={user.avatar} alt='Avatar' className='avatar-img' />
+								<img
+									src='https://tse2.mm.bing.net/th?id=OIP.Siu7xzx1R99lF07TMTwafQHaHR&pid=Api&P=0&h=180'
+									alt='Avatar'
+									className='avatar-img'
+								/>
 								{user.username}
 								<Button
 									variant='success'

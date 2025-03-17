@@ -1,6 +1,6 @@
 const { body, validationResult } = require('express-validator');
-const { User } = require('../models/User'); // Import model User
-const bcrypt = require('bcrypt'); //bcrypt for password hashing
+const User = require('../models/User'); // Import model User
+const bcrypt = require('bcryptjs'); //bcrypt for password hashing
 
 // Middleware handles validation errors
 const validateRequest = (req, res, next) => {

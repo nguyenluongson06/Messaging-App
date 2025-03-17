@@ -1,27 +1,51 @@
-# Use Node.js to build the frontend application
-FROM node:18 AS builder
+# Build stage
+FROM node:lts AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
+# Copy package files from project root
+COPY ./frontend/package*.json ./
 
+# Install dependencies
 RUN npm install
 
-COPY . .
+# Copy frontend source from project root
+COPY ./frontend/ ./
 
+# Build the app
 RUN npm run build
 
-# Use Node.js to serve the frontend
-FROM node:18-alpine
+# Production stage
+FROM nginx:alpine
 
-WORKDIR /app
+# Copy built files
+COPY --from=builder /app/build /usr/share/nginx/html
 
-COPY --from=builder /app/build ./build
-COPY --from=builder /app/server.js ./server.js
-COPY package*.json ./
-
-RUN npm install --only=production
+# Create nginx config inline
+RUN echo 'server { \
+    listen 3001; \
+    server_name localhost; \
+    root /usr/share/nginx/html; \
+    index index.html; \
+    location / { \
+    try_files $uri $uri/ /index.html; \
+    } \
+    location /api/ { \
+    proxy_pass http://backend:3000/; \
+    proxy_http_version 1.1; \
+    proxy_set_header Upgrade $http_upgrade; \
+    proxy_set_header Connection "upgrade"; \
+    proxy_set_header Host $host; \
+    } \
+    location /socket.io/ { \
+    proxy_pass http://backend:3000/socket.io/; \
+    proxy_http_version 1.1; \
+    proxy_set_header Upgrade $http_upgrade; \
+    proxy_set_header Connection "upgrade"; \
+    proxy_set_header Host $host; \
+    } \
+    }' > /etc/nginx/conf.d/default.conf
 
 EXPOSE 3001
 
-CMD ["node", "server.js"]
+CMD ["nginx", "-g", "daemon off;"]

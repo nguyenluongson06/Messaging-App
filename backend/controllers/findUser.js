@@ -13,7 +13,7 @@ exports.findUser = async (req, res) => {
 			where: {
 				[Op.or]: [
 					{ username: { [Op.like]: `%${query}%` } },
-					{ uid: { [Op.like]: `%${query}%` } },
+					{ id: { [Op.like]: `%${query}%` } },
 				],
 			},
 			attributes: { exclude: ['password'] },

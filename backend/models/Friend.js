@@ -1,23 +1,39 @@
 const { DataTypes, Model } = require('sequelize');
-const sequelize = require('../config/database');
-const User = require('./User');
+const { sequelize } = require('../config/database');
 
 class Friend extends Model {}
 Friend.init(
 	{
-		id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+		id: {
+			type: DataTypes.INTEGER,
+			primaryKey: true,
+			autoIncrement: true,
+		},
 		user1_id: {
 			type: DataTypes.INTEGER,
 			allowNull: false,
-			references: { model: User, key: 'id' },
 		},
 		user2_id: {
 			type: DataTypes.INTEGER,
 			allowNull: false,
-			references: { model: User, key: 'id' },
+		},
+		created_at: {
+			type: DataTypes.DATE,
+			defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),
 		},
 	},
-	{ sequelize, modelName: 'Friend', timestamps: false },
+	{
+		sequelize,
+		modelName: 'Friend',
+		tableName: 'Friends',
+		timestamps: false,
+		indexes: [
+			{
+				unique: true,
+				fields: ['user1_id', 'user2_id'],
+			},
+		],
+	},
 );
 
 module.exports = Friend;

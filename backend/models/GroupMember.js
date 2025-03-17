@@ -1,21 +1,21 @@
 const { DataTypes, Model } = require('sequelize');
-const sequelize = require('../config/database');
-const ChatGroup = require('./ChatGroup');
-const User = require('./User');
+const { sequelize } = require('../config/database');
 
 class GroupMember extends Model {}
 GroupMember.init(
 	{
-		id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+		id: {
+			type: DataTypes.INTEGER,
+			primaryKey: true,
+			autoIncrement: true,
+		},
 		group_id: {
-			type: DataTypes.STRING(10),
+			type: DataTypes.INTEGER,
 			allowNull: false,
-			references: { model: ChatGroup, key: 'uid' },
 		},
 		user_id: {
-			type: DataTypes.STRING(10),
+			type: DataTypes.INTEGER,
 			allowNull: false,
-			references: { model: User, key: 'uid' },
 		},
 		role: {
 			type: DataTypes.ENUM('member', 'admin', 'owner'),
@@ -26,9 +26,16 @@ GroupMember.init(
 			type: DataTypes.DATE,
 			defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),
 		},
-		alias: { type: DataTypes.STRING(255) },
+		alias: {
+			type: DataTypes.STRING(255),
+		},
 	},
-	{ sequelize, modelName: 'GroupMember', timestamps: false },
+	{
+		sequelize,
+		modelName: 'GroupMember',
+		tableName: 'ChatGroupMembers',
+		timestamps: false,
+	},
 );
 
 module.exports = GroupMember;

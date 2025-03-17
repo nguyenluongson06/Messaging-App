@@ -1,28 +1,37 @@
 const { DataTypes, Model } = require('sequelize');
-const sequelize = require('../config/database');
-const User = require('./User');
+const { sequelize } = require('../config/database');
 
 class UserKey extends Model {}
 UserKey.init(
 	{
-		id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-		user_id: {
-			type: DataTypes.STRING(10),
-			allowNull: false,
-			references: { model: User, key: 'uid' },
+		id: {
+			type: DataTypes.INTEGER,
+			primaryKey: true,
+			autoIncrement: true,
 		},
-		public_key: { type: DataTypes.STRING(255), allowNull: false },
-		private_key: { type: DataTypes.STRING(255), allowNull: false },
+		user_id: {
+			type: DataTypes.INTEGER,
+			allowNull: false,
+			references: {
+				model: 'Users',
+				key: 'id',
+			},
+		},
+		public_key: {
+			type: DataTypes.TEXT,
+			allowNull: false,
+		},
 		created_at: {
 			type: DataTypes.DATE,
 			defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),
 		},
-		updated_at: {
-			type: DataTypes.DATE,
-			defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),
-		},
 	},
-	{ sequelize, modelName: 'UserKey', timestamps: false },
+	{
+		sequelize,
+		modelName: 'UserKey',
+		tableName: 'UserKeys',
+		timestamps: false,
+	},
 );
 
 module.exports = UserKey;

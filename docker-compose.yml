@@ -1,4 +1,7 @@
-version: '3.8'
+networks:
+  app-network:
+    driver: bridge
+
 services:
   mysql:
     image: mysql:8
@@ -14,18 +17,18 @@ services:
     ports:
       - "3306:3306"
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
-      interval: 10s
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "chatuser", "--password=chatpassword" ]
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
+    networks:
+      - app-network
 
   backend:
     build:
-      context: ./backend
-      dockerfile: ../docker/Dockerfile.backend
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
+      context: .
+      dockerfile: docker/Dockerfile.backend
     container_name: chat_backend
     restart: always
     depends_on:
@@ -38,24 +41,34 @@ services:
       DB_NAME: chatdb
       JWT_SECRET: your_jwt_secret
       PORT: 3000
+      DB_MAX_RETRIES: 5
+      DB_RETRY_INTERVAL: 5000
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     ports:
       - "3000:3000"
+    networks:
+      - app-network
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: ../docker/Dockerfile.frontend
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      context: .
+      dockerfile: docker/Dockerfile.frontend
     container_name: chat_frontend
     restart: always
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     ports:
       - "3001:3001"
     environment:
-      REACT_APP_API_URL: http://localhost:3000
+      REACT_APP_API_URL: http://localhost:3000/api
+    networks:
+      - app-network
 
 volumes:
   mysql_data:

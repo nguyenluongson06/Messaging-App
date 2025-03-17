@@ -1,7 +1,7 @@
 // filepath: c:\Users\nguye\OneDrive\Documents\GitHub\Messaging-App\frontend\src\chatService.js
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000';
+const API_URL = 'http://localhost:3000/api';
 
 export const createChatGroup = async (name, description, token) => {
 	const response = await axios.post(

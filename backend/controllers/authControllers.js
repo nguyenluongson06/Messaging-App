@@ -1,6 +1,6 @@
 const validator = require('validator');
 const User = require('../models/User');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const logger = require('../logger'); // Import the logger
 
@@ -41,9 +41,7 @@ module.exports.userRegister = async (req, res) => {
 		}
 
 		logger.info('Creating new user');
-		let uid = Math.random().toString(36).substring(2, 12);
 		const userCreate = await User.create({
-			uid: uid,
 			email: email,
 			username: userName,
 			password: await bcrypt.hash(password, 10),

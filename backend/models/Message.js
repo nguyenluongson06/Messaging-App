@@ -1,34 +1,43 @@
-const { DataTypes, Model } = require('sequelize');
-const sequelize = require('../config/database');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/database');
 const User = require('./User');
-const ChatGroup = require('./ChatGroup');
 
-class Message extends Model {}
-Message.init(
+const Message = sequelize.define(
+	'Message',
 	{
-		id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+		id: {
+			type: DataTypes.INTEGER,
+			primaryKey: true,
+			autoIncrement: true,
+		},
 		sender_id: {
-			type: DataTypes.STRING(10),
+			type: DataTypes.INTEGER,
 			allowNull: false,
-			references: { model: User, key: 'uid' },
+			references: {
+				model: User,
+				key: 'id',
+			},
 		},
 		group_id: {
-			type: DataTypes.STRING(10),
+			type: DataTypes.STRING(100),
 			allowNull: false,
-			references: { model: ChatGroup, key: 'uid' },
 		},
-		content: { type: DataTypes.TEXT, allowNull: false },
+		content: {
+			type: DataTypes.TEXT,
+			allowNull: false,
+		},
 		type: {
 			type: DataTypes.ENUM('text', 'image', 'file'),
-			allowNull: false,
 			defaultValue: 'text',
 		},
 		created_at: {
 			type: DataTypes.DATE,
-			defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),
+			defaultValue: DataTypes.NOW,
 		},
 	},
-	{ sequelize, modelName: 'Message', timestamps: false },
+	{
+		timestamps: false,
+	},
 );
 
 module.exports = Message;

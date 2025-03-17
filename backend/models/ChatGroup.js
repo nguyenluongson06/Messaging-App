@@ -1,23 +1,43 @@
 const { DataTypes, Model } = require('sequelize');
-const sequelize = require('../config/database');
-const User = require('./User');
+const { sequelize } = require('../config/database');
 
 class ChatGroup extends Model {}
 ChatGroup.init(
 	{
-		id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-		uid: { type: DataTypes.STRING(10), unique: true, allowNull: false },
-		name: { type: DataTypes.STRING(255), allowNull: false },
-		description: { type: DataTypes.TEXT },
-		owner_id: {
-			type: DataTypes.STRING(10),
-			allowNull: false,
-			references: { model: User, key: 'uid' },
+		id: {
+			type: DataTypes.INTEGER,
+			primaryKey: true,
+			autoIncrement: true,
 		},
-		created_at: { type: DataTypes.DATE, defaultValue: sequelize.literal('CURRENT_TIMESTAMP') },
-		updated_at: { type: DataTypes.DATE, defaultValue: sequelize.literal('CURRENT_TIMESTAMP') },
+		name: {
+			type: DataTypes.STRING(255),
+			allowNull: false,
+		},
+		type: {
+			type: DataTypes.ENUM('direct', 'group'),
+			allowNull: false,
+			defaultValue: 'group',
+		},
+		owner_id: {
+			type: DataTypes.INTEGER,
+			allowNull: false,
+		},
+		created_at: {
+			type: DataTypes.DATE,
+			defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),
+		},
+		updated_at: {
+			type: DataTypes.DATE,
+			defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),
+			onUpdate: sequelize.literal('CURRENT_TIMESTAMP'),
+		},
 	},
-	{ sequelize, modelName: 'ChatGroup', timestamps: false },
+	{
+		sequelize,
+		modelName: 'ChatGroup',
+		tableName: 'ChatGroups',
+		timestamps: false,
+	},
 );
 
 module.exports = ChatGroup;

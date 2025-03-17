@@ -1,30 +1,73 @@
-const ChatGroup = require('../models/ChatGroup');
-const User = require('../models/User');
-const GroupMember = require('../models/GroupMember');
+const { ChatGroup, User, GroupMember } = require('../models/sync');
+const { Op } = require('sequelize');
+const logger = require('../logger');
 
 exports.createChatGroup = async (req, res) => {
 	try {
-		const { name, description } = req.body;
+		const { name, type, members } = req.body;
 		const owner_id = req.user.id;
 
-		const owner = await User.findOne({ where: { id: owner_id } });
-		if (!owner) {
-			return res.status(404).json({ message: 'Owner not found' });
+		logger.info(`Creating chat group: ${name}, type: ${type}`);
+
+		// For direct chats, check if one already exists
+		if (type === 'direct' && members?.length === 1) {
+			const existingChat = await ChatGroup.findOne({
+				where: {
+					type: 'direct',
+					'$members.id$': {
+						[Op.in]: [owner_id, members[0]],
+					},
+				},
+				include: [
+					{
+						model: User,
+						as: 'members',
+						attributes: ['id', 'username', 'email'],
+					},
+				],
+			});
+
+			if (existingChat) {
+				logger.info(`Found existing direct chat: ${existingChat.id}`);
+				return res.status(200).json(existingChat);
+			}
 		}
-		const uid = Math.random().toString(36).substring(2, 12);
+
+		// Create new chat group
 		const newGroup = await ChatGroup.create({
-			uid: uid,
-			name: name,
-			description: description,
-			owner_id: owner_id,
+			name,
+			type: type || 'group',
+			owner_id,
 		});
-		return res
-			.status(201)
-			.json({ message: 'Chat group created successfully', group: newGroup });
+
+		// Add all members including owner
+		const memberIds = [...new Set([owner_id, ...(members || [])])];
+		await Promise.all(
+			memberIds.map((memberId) =>
+				GroupMember.create({
+					group_id: newGroup.id,
+					user_id: memberId,
+					role: memberId === owner_id ? 'owner' : 'member',
+				}),
+			),
+		);
+
+		// Get complete group data
+		const groupWithMembers = await ChatGroup.findByPk(newGroup.id, {
+			include: [
+				{
+					model: User,
+					as: 'members',
+					attributes: ['id', 'username', 'email'],
+				},
+			],
+		});
+
+		logger.info(`Created new chat group: ${newGroup.id}`);
+		return res.status(201).json(groupWithMembers);
 	} catch (error) {
-		return res
-			.status(500)
-			.json({ message: 'Error creating group', error: error.message });
+		logger.error('Error creating chat group:', error);
+		return res.status(500).json({ message: 'Error creating chat group' });
 	}
 };
 
@@ -32,12 +75,12 @@ exports.updateMemberInGroup = async (req, res) => {
 	try {
 		const { group_id, user_id, role, alias } = req.body;
 
-		const group = await ChatGroup.findOne({ where: { uid: group_id } });
+		const group = await ChatGroup.findByPk(group_id);
 		if (!group) {
 			return res.status(404).json({ message: 'Group not found' });
 		}
 
-		const user = await User.findOne({ where: { uid: user_id } });
+		const user = await User.findOne({ where: { id: user_id } });
 		if (!user) {
 			return res.status(404).json({ message: 'User not found' });
 		}
@@ -67,12 +110,12 @@ exports.addMember = async (req, res) => {
 	try {
 		const { group_id, user_id } = req.body;
 
-		const group = await ChatGroup.findOne({ where: { uid: group_id } });
+		const group = await ChatGroup.findByPk(group_id);
 		if (!group) {
 			return res.status(404).json({ message: 'Group not found' });
 		}
 
-		const user = await User.findOne({ where: { uid: user_id } });
+		const user = await User.findOne({ where: { id: user_id } });
 		if (!user) {
 			return res.status(404).json({ message: 'User not found' });
 		}
@@ -105,12 +148,12 @@ exports.removeMember = async (req, res) => {
 	try {
 		const { group_id, user_id } = req.body;
 
-		const group = await ChatGroup.findOne({ where: { uid: group_id } });
+		const group = await ChatGroup.findByPk(group_id);
 		if (!group) {
 			return res.status(404).json({ message: 'Group not found' });
 		}
 
-		const user = await User.findOne({ where: { uid: user_id } });
+		const user = await User.findOne({ where: { id: user_id } });
 		if (!user) {
 			return res.status(404).json({ message: 'User not found' });
 		}
@@ -128,5 +171,31 @@ exports.removeMember = async (req, res) => {
 		return res
 			.status(500)
 			.json({ message: 'Error removing member', error: error.message });
+	}
+};
+
+exports.getUserChats = async (req, res) => {
+	try {
+		const userId = req.user.id;
+		logger.info(`Fetching chats for user: ${userId}`);
+
+		const chats = await ChatGroup.findAll({
+			include: [
+				{
+					model: User,
+					as: 'members',
+					attributes: ['id', 'username', 'email'],
+				},
+			],
+			where: {
+				'$members.id$': userId,
+			},
+		});
+
+		logger.info(`Found ${chats.length} chats for user ${userId}`);
+		return res.status(200).json(chats);
+	} catch (error) {
+		logger.error('Error fetching chats:', error);
+		return res.status(500).json({ message: 'Error fetching chats' });
 	}
 };

@@ -1,4 +1,4 @@
-const { Message } = require('../models/Message');
+const Message = require('../models/Message');
 
 // save encrypted message to db
 async function saveMessage(senderId, groupId, encryptedMessage) {

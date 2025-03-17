@@ -1,5 +1,5 @@
 const sodium = require('libsodium-wrappers');
-const { UserKey } = require('../models/UserKey');
+const UserKey = require('../models/UserKey');
 
 // create public + private key
 async function generateKeys(user_id) {

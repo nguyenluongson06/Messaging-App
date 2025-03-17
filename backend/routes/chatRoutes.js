@@ -5,12 +5,16 @@ const {
 	updateMemberInGroup,
 	addMember,
 	removeMember,
+	getUserChats, // Add this import
 } = require('../controllers/chatGroupController');
 const { authenticateToken, isGroupOwner } = require('../middlewares/auth');
 const {
 	validateGroupCreation,
 	validateGroupMemberOperation,
 } = require('../middlewares/validation');
+
+// Add GET route for fetching user's chats
+router.get('/', authenticateToken, getUserChats);
 
 /**
  * @swagger

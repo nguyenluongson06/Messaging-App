@@ -5,7 +5,7 @@ import Sidebar from '../components/Sidebar';
 import ChatWindow from '../components/ChatWindow';
 import { Container, Row, Col, Button } from 'react-bootstrap';
 
-const Chat = () => {
+const Chat = ({ user }) => {
 	const [currentChat, setCurrentChat] = useState(null);
 	const navigate = useNavigate();
 
@@ -19,11 +19,11 @@ const Chat = () => {
 			<Container fluid className='chat-container'>
 				<Row>
 					<Col md={3}>
-						<Sidebar setCurrentChat={setCurrentChat} />
+						<Sidebar setCurrentChat={setCurrentChat} user={user} />
 					</Col>
 					<Col md={9}>
 						{currentChat ? (
-							<ChatWindow user={currentChat} />
+							<ChatWindow user={user} currentChat={currentChat} />
 						) : (
 							<div className='d-flex justify-content-center align-items-center h-100'>
 								<h4>Chọn một người để bắt đầu trò chuyện</h4>
